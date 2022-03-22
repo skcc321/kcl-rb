@@ -41,18 +41,16 @@ module Kcl
         @checkpoint == Kcl::Checkpoints::Sentinel::SHARD_END
       end
 
-      def unlocked?
+      def abendoned?
         !lease_timeout || Time.now.utc > lease_timeout_datetime
       end
 
-      def abendoned?
-        (lease_owner.to_s.empty? && new_owner.to_s.empty?) ||
-        # twice more time for abendoned detection
-        !lease_timeout || Time.now.utc - Kcl.config.dynamodb_failover_seconds > lease_timeout_datetime
+      def can_be_owned_by?(id)
+        lease_owner != id && new_owner == id
       end
 
-      def can_be_owned_by?(id)
-        (!lease_owner || unlocked?) && (!new_owner || new_owner == id || abendoned?)
+      def reserved_by?(id)
+        (!abendoned? && lease_owner == id) || (new_owner == id && lease_owner == id)
       end
 
       def change_owner?

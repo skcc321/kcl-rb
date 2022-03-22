@@ -125,6 +125,7 @@ module Kcl
 
       if ask
         item[DYNAMO_DB_LEASE_NEW_OWNER_KEY] = next_assigned_to
+        item[DYNAMO_DB_LEASE_OWNER_KEY] = shard.lease_owner
       else
         item[DYNAMO_DB_LEASE_OWNER_KEY] = next_assigned_to
       end
@@ -148,6 +149,7 @@ module Kcl
           shard.new_owner   = next_assigned_to
         else
           shard.assigned_to   = next_assigned_to
+          shard.new_owner   = nil
         end
         shard.lease_timeout = next_lease_timeout.to_s
       else

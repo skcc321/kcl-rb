@@ -113,6 +113,7 @@ module Kcl
         Kcl.logger.info(message: "Found new shard", shard:  shard.to_h)
       end
 
+
       @live_shards.each do |shard_id, alive|
         if alive
           begin
@@ -174,26 +175,20 @@ module Kcl
       end
 
       @shards.each do |shard_id, shard|
-        break if reassign_count >= stats[:shards_per_worker]
-        next if shard.lease_owner == @id
+        break if reassign_count > stats[:shards_per_worker]
 
-        if shard.new_owner == @id
+        if shard.reserved_by?(@id)
           reassign_count += 1
-
-          if reassign_count >= stats[:shards_per_worker]
-            break
-          else
-            next
-          end
+          next
         end
 
-        next if !shard.abendoned? && stats[:owner_stats][shard.assigned_to] <= stats[:shards_per_worker]
+        if shard.abendoned? || stats[:owner_stats][shard.assigned_to] > stats[:shards_per_worker]
+          Kcl.logger.info(message: "Rebalance", shard: shard_id, from: shard.lease_owner, to: @id)
+          @shards[shard_id] = checkpointer.ask_for_lease(shard, @id)
+          reassign_count += 1
+          stats[:owner_stats][shard.assigned_to] -= 1
+        end
 
-        Kcl.logger.debug(message: "Rebalance", shard: shard_id, from: shard.lease_owner, to: @id)
-
-        @shards[shard_id] = checkpointer.ask_for_lease(shard, @id)
-        reassign_count += 1
-        stats[:owner_stats][shard.assigned_to] -= 1
       rescue Aws::DynamoDB::Errors::ConditionalCheckFailedException
         Kcl.logger.error(message: "Rebalance failed", shard: shard, to: @id)
         next
