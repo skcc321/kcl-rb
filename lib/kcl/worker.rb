@@ -145,7 +145,7 @@ module Kcl
         next if shard.completed?
 
         shards_count += 1
-        owner_stats[shard.lease_owner] += 1
+        owner_stats[shard.new_owner || shard.lease_owner] += 1
         workers << shard.lease_owner unless shard.abendoned?
       end
 
