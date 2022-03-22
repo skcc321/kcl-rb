@@ -120,12 +120,13 @@ module Kcl
 
       item = {
         "#{DYNAMO_DB_LEASE_PRIMARY_KEY}" => shard.shard_id,
-        "#{DYNAMO_DB_LEASE_OWNER_KEY}"   => next_assigned_to,
         "#{DYNAMO_DB_LEASE_TIMEOUT_KEY}" => next_lease_timeout.to_s
       }
 
       if ask
         item[DYNAMO_DB_LEASE_NEW_OWNER_KEY] = next_assigned_to
+      else
+        item[DYNAMO_DB_LEASE_OWNER_KEY] = next_assigned_to
       end
 
       if shard.checkpoint != ''
@@ -143,7 +144,11 @@ module Kcl
         expression_attributes
       )
       if result
-        shard.assigned_to   = next_assigned_to
+        if ask
+          shard.new_owner   = next_assigned_to
+        else
+          shard.assigned_to   = next_assigned_to
+        end
         shard.lease_timeout = next_lease_timeout.to_s
       else
         Kcl.logger.warn(mesage: "Failed to get lease for shard at", commit: commit, shard: shard.to_h)
