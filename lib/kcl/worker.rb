@@ -225,7 +225,7 @@ module Kcl
       end
 
       if stats[:desired_state] != stats[:current_state]
-        ap(message: "Rebalancing...", **stats)
+        Kcl.logger.info(message: "Rebalancing...", **stats)
       end
 
     rescue Aws::DynamoDB::Errors::ConditionalCheckFailedException
