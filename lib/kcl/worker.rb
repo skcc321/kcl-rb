@@ -214,7 +214,8 @@ module Kcl
       stats = count_stats
 
       active_shards.each do |shard_id, shard|
-        if shard.potential_owner && @consumers[shard_id] && !@consumers[shard_id][:stop]
+        # puts "#{shard_id}: #{shard.lease_owner} #{shard.lease_owner == @id ? ' (me)' : ''} -> #{shard.pending_owner} #{shard.pending_owner == @id ? ' (me)' : ''}"
+        if shard.potential_owner && shard.potential_owner != @id && @consumers[shard_id] && !@consumers[shard_id][:stop]
           Kcl.logger.info(message: "soft release", shard: shard)
           @consumers[shard_id][:stop] = true
         end

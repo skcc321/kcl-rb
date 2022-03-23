@@ -51,9 +51,9 @@ module Kcl
       if checkpoint[DYNAMO_DB_LEASE_OWNER_KEY]
         shard.lease_owner = checkpoint[DYNAMO_DB_LEASE_OWNER_KEY]
       end
-      if checkpoint[DYNAMO_DB_LEASE_PENDING_OWNER_KEY]
-        shard.pending_owner = checkpoint[DYNAMO_DB_LEASE_PENDING_OWNER_KEY]
-      end
+
+      shard.pending_owner = checkpoint[DYNAMO_DB_LEASE_PENDING_OWNER_KEY]
+
       if checkpoint[DYNAMO_DB_LEASE_TIMEOUT_KEY]
         shard.lease_timeout = checkpoint[DYNAMO_DB_LEASE_TIMEOUT_KEY]
       end
