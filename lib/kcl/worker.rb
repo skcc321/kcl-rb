@@ -213,15 +213,22 @@ module Kcl
     def rebalance_shards!
       stats = count_stats
 
-      @shards.each do |shard_id, shard|
+      active_shards.each do |shard_id, shard|
+        if shard.potential_owner && @consumers[shard_id] && !@consumers[shard_id][:stop]
+          Kcl.logger.info(message: "soft release", shard: shard)
+          @consumers[shard_id][:stop] = true
+        end
+      end
+
+      active_shards.each do |shard_id, shard|
         next if shard.potential_owner == @id
         break if stats[:desired_state][@id].count >= stats[:shards_per_worker]
 
         if @workers[shard.potential_owner].blank? || shard.abendoned? || stats[:desired_state][shard.potential_owner].count > stats[:shards_per_worker]
           shard_to_move = stats[:desired_state][shard.potential_owner].delete(shard_id)
           stats[:desired_state][@id].push(shard_to_move)
-          @consumers[shard_id][:stop] = true if @consumers[shard_id]
           @shards[shard_id] = checkpointer.ask_for_lease(shard, @id)
+          Kcl.logger.info(message: "ask release", shard: shard)
         end
       end
 
@@ -240,6 +247,8 @@ module Kcl
     # Process records by shard
     def consume_shards!
       active_shards.each do |shard_id, shard|
+        next if @consumers[shard_id] && @consumers[shard_id].alive?
+
         # the shard has owner already
         next unless shard.can_be_processed_by?(@id)
 
