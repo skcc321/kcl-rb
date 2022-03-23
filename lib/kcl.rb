@@ -1,5 +1,6 @@
 require 'kcl/checkpointer'
 require 'kcl/checkpoints/sentinel'
+require 'kcl/heartbeater'
 require 'kcl/config'
 require 'kcl/errors'
 require 'kcl/logger'

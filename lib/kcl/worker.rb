@@ -1,16 +1,22 @@
 require "eventmachine"
 require "securerandom"
+require 'kcl/heartbeater'
 
 module Kcl
   class Worker
-    PROCESS_INTERVAL = 2 # by sec
+    attr_reader :id, :liveness_timeout
 
     def self.run(id, record_processor_factory)
       worker = self.new(id, record_processor_factory)
       worker.start
     end
 
-    def initialize(id, record_processor_factory)
+    def liveness_timeout_datetime
+      return nil if liveness_timeout.to_s.empty?
+      Time.parse(liveness_timeout)
+    end
+
+    def initialize(id, record_processor_factory, liveness_timeout = nil)
       @id = id
       @record_processor_factory = record_processor_factory
       @live_shards  = {} # Map<String, Boolean>
@@ -18,7 +24,11 @@ module Kcl
       @consumers = [] # [Array<Thread>] args the arguments passed from input. This array will be modified.
       @kinesis = nil # Kcl::Proxies::KinesisProxy
       @checkpointer = nil # Kcl::Checkpointer
+      @heartbeater = nil
       @timer = nil
+      @liveness_timeout = nil
+      @live_workers = {}
+      @workers = {}
     end
 
     # process 1                               process 2
@@ -35,19 +45,29 @@ module Kcl
 
     # Start consuming data from the stream,
     # and pass it to the application record processors.
-    def start
-      Kcl.logger.info(message: "Start worker", object_id: object_id)
+    def demonize
+      return yield if ENV["DEBUG"] == "true"
 
       EM.run do
         trap_signals
 
-        @timer = EM::PeriodicTimer.new(PROCESS_INTERVAL) do
-          Thread.current[:uuid] = SecureRandom.uuid
-          sync_shards!
-          rebalance_shards!
-          cleanup_dead_consumers
-          consume_shards!
+        @timer = EM::PeriodicTimer.new(Kcl.config.sync_interval_seconds) do
+          yield
         end
+      end
+    end
+
+    def start
+      Kcl.logger.info(message: "Start worker", object_id: object_id)
+
+      demonize do
+        Thread.current[:uuid] = SecureRandom.uuid
+        heartbeat!
+        sync_shards!
+        sync_workers!
+        rebalance_shards!
+        cleanup_dead_consumers
+        consume_shards!
       end
 
       cleanup
@@ -55,6 +75,10 @@ module Kcl
     rescue => e
       Kcl.logger.error(e)
       raise e
+    end
+
+    def heartbeat!
+      @liveness_timeout = heartbeater.ping(self)
     end
 
     # Shutdown gracefully
@@ -74,11 +98,13 @@ module Kcl
     def cleanup
       @live_shards = {}
       @shards = {}
+      @live_workers = {}
+      @workers = {}
       @kinesis = nil
       @checkpointer = nil
       @consumers = []
+      @heartbeater.cleanup(self)
     end
-
 
     def terminate_consumers!
       Kcl.logger.info(message: "Stop #{@consumers.count} consumers in draining mode...")
@@ -125,6 +151,7 @@ module Kcl
         else
           checkpointer.remove_lease(@shards[shard_id])
           @shards.delete(shard_id)
+          @live_shards.delete(shard_id)
           Kcl.logger.info(message: "Remove shard", shard_id:  shard_id)
         end
       end
@@ -132,32 +159,50 @@ module Kcl
       @shards
     end
 
-    def groups_stats
-      @shards.group_by {|k, shard| shard.lease_owner }.transform_values {|v| v.map(&:first) }
-    end
+    def sync_workers!
+      @live_workers.transform_values! { |_| false }
 
-    def detailed_stats
-      owner_stats = Hash.new(0)
-      reassign_count = 0
-      shards_count = 0
-      workers = [@id]
+      heartbeater.fetch_workers.each do |worker|
+        @live_workers[worker.id] = worker.alive?
 
-      @shards.each do |shard_id, shard|
-        next if shard.completed?
+        unless @workers[worker.id]
+          Kcl.logger.info(message: "Found new worker", worker:  worker.id)
+        end
 
-        shards_count += 1
-        owner_stats[shard.new_owner || shard.lease_owner] += 1
-        workers << shard.lease_owner unless shard.abendoned?
+        @workers[worker.id] = worker
       end
 
-      number_of_workers = workers.compact.uniq.count
+      @live_workers.each do |worker_id, alive|
+        unless alive
+          heartbeater.cleanup(@workers[worker_id])
+          @workers.delete(worker_id)
+          @live_workers.delete(worker_id)
+          Kcl.logger.info(message: "Remove worker", worker:  worker_id)
+        end
+      end
+
+      @workers
+    end
+
+    def current_state
+      active_shards.group_by do |shard_id, shard|
+        shard.potential_owner
+      end.transform_values { |v| v.map(&:first) }.reverse_merge(@id => [])
+    end
+
+    def active_shards
+      @shards.reject { |shard_id, shard| shard.completed? }
+    end
+
+    def count_stats
+      shards_count = active_shards.count
+      number_of_workers = @workers.count
       shards_per_worker = number_of_workers == 1 ? shards_count : (shards_count.to_f / number_of_workers).round
 
       {
-
         id: @id,
-        owner_stats: owner_stats,
-        groups_stats: groups_stats,
+        desired_state: current_state,
+        current_state: current_state,
         number_of_workers: number_of_workers,
         shards_per_worker: shards_per_worker,
         shards_count: shards_count
@@ -166,33 +211,25 @@ module Kcl
 
     # Count the number of leases hold by worker excluding the processed shard
     def rebalance_shards!
-      stats = detailed_stats
-      reassign_count = 0
-
-      unless @stats == stats
-        @stats = stats
-        Kcl.logger.info(message: "Rebalancing...", **stats)
-      end
+      stats = count_stats
 
       @shards.each do |shard_id, shard|
-        break if reassign_count > stats[:shards_per_worker]
+        next if shard.potential_owner == @id
+        break if stats[:desired_state][@id].count >= stats[:shards_per_worker]
 
-        if shard.reserved_by?(@id)
-          reassign_count += 1
-          next
-        end
-
-        if shard.abendoned? || stats[:owner_stats][shard.assigned_to] > stats[:shards_per_worker]
-          Kcl.logger.info(message: "Rebalance", shard: shard_id, from: shard.lease_owner, to: @id)
+        if @workers[shard.potential_owner].blank? || shard.abendoned? || stats[:desired_state][shard.potential_owner].count > stats[:shards_per_worker]
+          shard_to_move = stats[:desired_state][shard.potential_owner].delete(shard_id)
+          stats[:desired_state][@id].push(shard_to_move)
           @shards[shard_id] = checkpointer.ask_for_lease(shard, @id)
-          reassign_count += 1
-          stats[:owner_stats][shard.assigned_to] -= 1
         end
-
-      rescue Aws::DynamoDB::Errors::ConditionalCheckFailedException
-        Kcl.logger.error(message: "Rebalance failed", shard: shard, to: @id)
-        next
       end
+
+      if stats[:desired_state] != stats[:current_state]
+        ap(message: "Rebalancing...", **stats)
+      end
+
+    rescue Aws::DynamoDB::Errors::ConditionalCheckFailedException
+      Kcl.logger.error(message: "Rebalance failed", shard: shard, to: @id)
     end
 
     def cleanup_dead_consumers
@@ -201,12 +238,9 @@ module Kcl
 
     # Process records by shard
     def consume_shards!
-      @shards.each do |shard_id, shard|
-        # shard is closed and processed all records
-        next if shard.completed?
-
+      active_shards.each do |shard_id, shard|
         # the shard has owner already
-        next unless shard.can_be_owned_by?(@id)
+        next unless shard.can_be_processed_by?(@id)
 
         # count the shard as consumed
         begin
@@ -245,6 +279,15 @@ module Kcl
         Kcl.logger.info(message: "Created Checkpoint in worker")
       end
       @checkpointer
+    end
+
+    def heartbeater
+      if @heartbeater.nil?
+        @heartbeater = Kcl::Heartbeater.new(Kcl.config)
+        @liveness_timeout = @heartbeater.fetch_liveness(self)
+      end
+
+      @heartbeater
     end
 
     def trap_signals

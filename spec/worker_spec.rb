@@ -97,7 +97,7 @@ RSpec.describe Kcl::Worker do
           OpenStruct.new(item: {
             Kcl::Checkpointer::DYNAMO_DB_LEASE_PRIMARY_KEY => "shardId-000000000001",
             Kcl::Checkpointer::DYNAMO_DB_LEASE_OWNER_KEY => "n/a",
-            Kcl::Checkpointer::DYNAMO_DB_LEASE_NEW_OWNER_KEY => worker_id,
+            Kcl::Checkpointer::DYNAMO_DB_LEASE_PENDING_OWNER_KEY => worker_id,
             Kcl::Checkpointer::DYNAMO_DB_LEASE_TIMEOUT_KEY => (Time.now - Kcl.config.dynamodb_failover_seconds - 1).to_s
           })
         )
@@ -135,7 +135,7 @@ RSpec.describe Kcl::Worker do
           OpenStruct.new(item: {
             Kcl::Checkpointer::DYNAMO_DB_LEASE_PRIMARY_KEY => "shardId-000000000001",
             Kcl::Checkpointer::DYNAMO_DB_LEASE_OWNER_KEY => "same stuck worker",
-            Kcl::Checkpointer::DYNAMO_DB_LEASE_NEW_OWNER_KEY => worker_id,
+            Kcl::Checkpointer::DYNAMO_DB_LEASE_PENDING_OWNER_KEY => worker_id,
             Kcl::Checkpointer::DYNAMO_DB_LEASE_TIMEOUT_KEY => (Time.now - 1).to_s
           })
         )
@@ -163,19 +163,19 @@ RSpec.describe Kcl::Worker do
         expect(stub_dynamodb_client).to receive(:put_item).with(a_hash_including(
           item: a_hash_including(
             Kcl::Checkpointer::DYNAMO_DB_LEASE_PRIMARY_KEY => "shardId-000000000001",
-            Kcl::Checkpointer::DYNAMO_DB_LEASE_NEW_OWNER_KEY => worker_id
+            Kcl::Checkpointer::DYNAMO_DB_LEASE_PENDING_OWNER_KEY => worker_id
           )
         ))
         expect(stub_dynamodb_client).to receive(:put_item).with(a_hash_including(
           item: a_hash_including(
             Kcl::Checkpointer::DYNAMO_DB_LEASE_PRIMARY_KEY => "shardId-000000000002",
-            Kcl::Checkpointer::DYNAMO_DB_LEASE_NEW_OWNER_KEY => worker_id
+            Kcl::Checkpointer::DYNAMO_DB_LEASE_PENDING_OWNER_KEY => worker_id
           )
         ))
         expect(stub_dynamodb_client).to receive(:put_item).with(a_hash_including(
           item: a_hash_including(
             Kcl::Checkpointer::DYNAMO_DB_LEASE_PRIMARY_KEY => "shardId-000000000004",
-            Kcl::Checkpointer::DYNAMO_DB_LEASE_NEW_OWNER_KEY => worker_id
+            Kcl::Checkpointer::DYNAMO_DB_LEASE_PENDING_OWNER_KEY => worker_id
           )
         ))
 
@@ -199,7 +199,7 @@ RSpec.describe Kcl::Worker do
           OpenStruct.new(item: {
             Kcl::Checkpointer::DYNAMO_DB_LEASE_PRIMARY_KEY => "shardId-000000000001",
             Kcl::Checkpointer::DYNAMO_DB_LEASE_OWNER_KEY => "same stuck worker",
-            Kcl::Checkpointer::DYNAMO_DB_LEASE_NEW_OWNER_KEY => worker_id,
+            Kcl::Checkpointer::DYNAMO_DB_LEASE_PENDING_OWNER_KEY => worker_id,
             Kcl::Checkpointer::DYNAMO_DB_LEASE_TIMEOUT_KEY => (Time.now - 1).to_s
           })
         )

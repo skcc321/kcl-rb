@@ -5,6 +5,8 @@ module Kcl
       :dynamodb_read_capacity,
       :dynamodb_write_capacity,
       :dynamodb_failover_seconds,
+      :workers_health_table_name,
+      :sync_interval_seconds,
       :kinesis_endpoint,
       :kinesis_stream_name,
       :logger,
@@ -18,6 +20,8 @@ module Kcl
       @dynamodb_read_capacity = 10
       @dynamodb_write_capacity = 10
       @dynamodb_failover_seconds = 10
+      @workers_health_table_name = nil
+      @sync_interval_seconds = 2
       @kinesis_endpoint = nil
       @kinesis_stream_name = nil
       @logger = nil

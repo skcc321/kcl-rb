@@ -4,7 +4,7 @@ module Kcl
   class Checkpointer
     DYNAMO_DB_LEASE_PRIMARY_KEY = 'shard_id'.freeze
     DYNAMO_DB_LEASE_OWNER_KEY   = 'assigned_to'.freeze
-    DYNAMO_DB_LEASE_NEW_OWNER_KEY   = 'reassign_to'.freeze
+    DYNAMO_DB_LEASE_PENDING_OWNER_KEY   = 'reassigned_to'.freeze
     DYNAMO_DB_LEASE_TIMEOUT_KEY = 'lease_timeout'.freeze
     DYNAMO_DB_CHECKPOINT_SEQUENCE_NUMBER_KEY = 'checkpoint'.freeze
     DYNAMO_DB_PARENT_SHARD_KEY  = 'parent_shard_id'.freeze
@@ -49,10 +49,10 @@ module Kcl
         shard.checkpoint = checkpoint[DYNAMO_DB_CHECKPOINT_SEQUENCE_NUMBER_KEY]
       end
       if checkpoint[DYNAMO_DB_LEASE_OWNER_KEY]
-        shard.assigned_to = checkpoint[DYNAMO_DB_LEASE_OWNER_KEY]
+        shard.lease_owner = checkpoint[DYNAMO_DB_LEASE_OWNER_KEY]
       end
-      if checkpoint[DYNAMO_DB_LEASE_NEW_OWNER_KEY]
-        shard.new_owner = checkpoint[DYNAMO_DB_LEASE_NEW_OWNER_KEY]
+      if checkpoint[DYNAMO_DB_LEASE_PENDING_OWNER_KEY]
+        shard.pending_owner = checkpoint[DYNAMO_DB_LEASE_PENDING_OWNER_KEY]
       end
       if checkpoint[DYNAMO_DB_LEASE_TIMEOUT_KEY]
         shard.lease_timeout = checkpoint[DYNAMO_DB_LEASE_TIMEOUT_KEY]
@@ -69,8 +69,8 @@ module Kcl
       item = {
         "#{DYNAMO_DB_LEASE_PRIMARY_KEY}" => shard.shard_id,
         "#{DYNAMO_DB_CHECKPOINT_SEQUENCE_NUMBER_KEY}" => shard.checkpoint,
-        "#{DYNAMO_DB_LEASE_OWNER_KEY}" => shard.assigned_to,
-        "#{DYNAMO_DB_LEASE_NEW_OWNER_KEY}" => shard.reassign_to,
+        "#{DYNAMO_DB_LEASE_OWNER_KEY}" => shard.lease_owner,
+        "#{DYNAMO_DB_LEASE_PENDING_OWNER_KEY}" => shard.pending_owner,
         "#{DYNAMO_DB_LEASE_TIMEOUT_KEY}" => shard.lease_timeout
       }
 
@@ -79,9 +79,7 @@ module Kcl
       end
 
       result = @dynamodb.put_item(@table_name, item)
-      if result
-        Kcl.logger.info(message: "Write checkpoint of shard", shard: shard.to_h)
-      else
+      unless result
         Kcl.logger.warn(message: "Failed write checkpoint of shard", shard: shard.to_h)
       end
 
@@ -124,7 +122,7 @@ module Kcl
       }
 
       if ask
-        item[DYNAMO_DB_LEASE_NEW_OWNER_KEY] = next_assigned_to
+        item[DYNAMO_DB_LEASE_PENDING_OWNER_KEY] = next_assigned_to
         item[DYNAMO_DB_LEASE_OWNER_KEY] = shard.lease_owner
       else
         item[DYNAMO_DB_LEASE_OWNER_KEY] = next_assigned_to
@@ -146,10 +144,10 @@ module Kcl
       )
       if result
         if ask
-          shard.new_owner   = next_assigned_to
+          shard.pending_owner = next_assigned_to
         else
-          shard.assigned_to   = next_assigned_to
-          shard.new_owner   = nil
+          shard.lease_owner = next_assigned_to
+          shard.pending_owner = nil
         end
         shard.lease_timeout = next_lease_timeout.to_s
       else
@@ -168,7 +166,7 @@ module Kcl
         { "#{DYNAMO_DB_LEASE_PRIMARY_KEY}" => shard.shard_id }
       )
       if result
-        shard.assigned_to   = nil
+        shard.lease_owner   = nil
         shard.checkpoint    = nil
         shard.lease_timeout = nil
       else
@@ -188,7 +186,7 @@ module Kcl
         "remove #{DYNAMO_DB_LEASE_OWNER_KEY}, #{DYNAMO_DB_LEASE_TIMEOUT_KEY}"
       )
       if result
-        shard.assigned_to = nil
+        shard.lease_owner = nil
         shard.lease_timeout = nil
       else
         Kcl.logger.warn(message: "Failed to remove lease owner for shard", shard: shard.to_h)
