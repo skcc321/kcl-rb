@@ -21,7 +21,7 @@ module Kcl
       @record_processor_factory = record_processor_factory
       @live_shards  = {} # Map<String, Boolean>
       @shards = {} # Map<String, Kcl::Workers::ShardInfo>
-      @consumers = [] # [Array<Thread>] args the arguments passed from input. This array will be modified.
+      @consumers = {} # [Array<Thread>] args the arguments passed from input. This array will be modified.
       @kinesis = nil # Kcl::Proxies::KinesisProxy
       @checkpointer = nil # Kcl::Checkpointer
       @heartbeater = nil
@@ -102,7 +102,7 @@ module Kcl
       @workers = {}
       @kinesis = nil
       @checkpointer = nil
-      @consumers = []
+      @consumers = {}
       @heartbeater.cleanup(self)
     end
 
@@ -110,7 +110,7 @@ module Kcl
       Kcl.logger.info(message: "Stop #{@consumers.count} consumers in draining mode...")
 
       # except main thread
-      @consumers.each do |consumer|
+      @consumers.each do |shard, consumer|
         consumer[:stop] = true
         consumer.join
       end
@@ -220,6 +220,7 @@ module Kcl
         if @workers[shard.potential_owner].blank? || shard.abendoned? || stats[:desired_state][shard.potential_owner].count > stats[:shards_per_worker]
           shard_to_move = stats[:desired_state][shard.potential_owner].delete(shard_id)
           stats[:desired_state][@id].push(shard_to_move)
+          @consumers[shard_id][:stop] = true if @consumers[shard_id]
           @shards[shard_id] = checkpointer.ask_for_lease(shard, @id)
         end
       end
@@ -233,7 +234,7 @@ module Kcl
     end
 
     def cleanup_dead_consumers
-      @consumers.delete_if { |consumer| !consumer.alive? }
+      @consumers.delete_if { |shard, consumer| !consumer.alive? }
     end
 
     # Process records by shard
@@ -250,7 +251,7 @@ module Kcl
           next
         end
 
-        @consumers << Thread.new do
+        @consumers[shard_id] = Thread.new do
           Thread.current[:uuid] = SecureRandom.uuid
           consumer = Kcl::Workers::Consumer.new(
             shard,
