@@ -14,9 +14,11 @@ end
 
 # use localstack
 Kcl.configure do |config|
-  config.dynamodb_endpoint = ENV["AWS_ENDPOINT"]
-  config.dynamodb_table_name = 'kcl-rb-test'
-  config.kinesis_endpoint = ENV["AWS_ENDPOINT"]
-  config.kinesis_stream_name = 'kcl-rb-test'
+  config.dynamodb_endpoint = "http://localhost:4566"
+  config.dynamodb_table_name = "kcl-rb-test"
+  config.dynamodb_table_name = "kcl-rb-test"
+  config.workers_health_table_name = "kcl-rb-test-health"
+  config.kinesis_endpoint = "http://localhost:4566"
+  config.kinesis_stream_name = "kcl-rb-test"
   config.logger = Kcl::Logger.new('/dev/null')
 end

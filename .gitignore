@@ -9,5 +9,3 @@
 /demo/vendor
 
 /pkg
-.env
-.env.test

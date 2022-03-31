@@ -16,7 +16,6 @@ services:
       - DEBUG=${LOCALSTACK_DEBUG:-true}
       - DEFAULT_REGION=ap-northeast-1
       - SERVICES=dynamodb,kinesis
-      - USE_SSL=true
     volumes:
       - "${PWD}/aws:/root/.aws"
       - "localstack-data:/tmp/localstack"

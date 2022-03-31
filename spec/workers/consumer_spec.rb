@@ -35,7 +35,10 @@ RSpec.describe Kcl::Workers::Consumer do
         allow(record_processor).to receive(:process_record)
       end
 
-      subject { consumer.consume! }
+      subject do
+        Thread.current[:stop] = true
+        consumer.consume!
+      end
 
       it do
         expect(subject).to be_nil
@@ -59,7 +62,10 @@ RSpec.describe Kcl::Workers::Consumer do
         allow(record_processor).to receive(:process_record)
       end
 
-      subject { consumer.consume! }
+      subject do
+        Thread.current[:stop] = true
+        consumer.consume!
+      end
 
       it do
         expect(subject).to be_nil
