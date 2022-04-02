@@ -1,25 +1,28 @@
+# frozen_string_literal: true
+
 require "eventmachine"
 require "securerandom"
-require 'kcl/heartbeater'
+require "kcl/heartbeater"
 
 module Kcl
   class Worker
     attr_reader :id, :liveness_timeout
 
     def self.run(id, record_processor_factory)
-      worker = self.new(id, record_processor_factory)
+      worker = new(id, record_processor_factory)
       worker.start
     end
 
     def liveness_timeout_datetime
       return nil if liveness_timeout.to_s.empty?
+
       Time.parse(liveness_timeout)
     end
 
-    def initialize(id, record_processor_factory, liveness_timeout = nil)
+    def initialize(id, record_processor_factory)
       @id = id
       @record_processor_factory = record_processor_factory
-      @live_shards  = {} # Map<String, Boolean>
+      @live_shards = {} # Map<String, Boolean>
       @shards = {} # Map<String, Kcl::Workers::ShardInfo>
       @consumers = {} # [Array<Thread>] args the arguments passed from input. This array will be modified.
       @kinesis = nil # Kcl::Proxies::KinesisProxy
@@ -45,15 +48,13 @@ module Kcl
 
     # Start consuming data from the stream,
     # and pass it to the application record processors.
-    def demonize
+    def demonize(&block)
       return yield if ENV["DEBUG"] == "true"
 
       EM.run do
         trap_signals
 
-        @timer = EM::PeriodicTimer.new(Kcl.config.sync_interval_seconds) do
-          yield
-        end
+        @timer = EM::PeriodicTimer.new(Kcl.config.sync_interval_seconds, &block)
       end
     end
 
@@ -72,7 +73,7 @@ module Kcl
 
       cleanup
       Kcl.logger.info(message: "Finish worker", object_id: object_id)
-    rescue => e
+    rescue StandardError => e
       Kcl.logger.error(e)
       raise e
     end
@@ -89,7 +90,7 @@ module Kcl
       EM.stop
 
       Kcl.logger.info(message: "Shutdown worker with signal #{signal} at #{object_id}")
-    rescue => e
+    rescue StandardError => e
       Kcl.logger.error(e)
       raise e
     end
@@ -110,17 +111,17 @@ module Kcl
       Kcl.logger.info(message: "Stop #{@consumers.count} consumers in draining mode...")
 
       # except main thread
-      @consumers.each do |shard, consumer|
+      @consumers.each do |_shard_id, consumer|
         consumer[:stop] = true
         consumer.join
       end
     end
 
     def terminate_timer!
-      unless @timer.nil?
-        @timer.cancel
-        @timer = nil
-      end
+      return if @timer.nil?
+
+      @timer.cancel
+      @timer = nil
     end
 
     # Add new shards and delete unused shards
@@ -130,15 +131,15 @@ module Kcl
       kinesis.shards.each do |shard|
         @live_shards[shard.shard_id] = true
         next if @shards[shard.shard_id]
+
         @shards[shard.shard_id] = Kcl::Workers::ShardInfo.new(
           shard.shard_id,
           shard.parent_shard_id,
           shard.sequence_number_range
         )
 
-        Kcl.logger.info(message: "Found new shard", shard:  shard.to_h)
+        Kcl.logger.info(message: "Found new shard", shard: shard.to_h)
       end
-
 
       @live_shards.each do |shard_id, alive|
         if alive
@@ -152,7 +153,7 @@ module Kcl
           checkpointer.remove_lease(@shards[shard_id])
           @shards.delete(shard_id)
           @live_shards.delete(shard_id)
-          Kcl.logger.info(message: "Remove shard", shard_id:  shard_id)
+          Kcl.logger.info(message: "Remove shard", shard_id: shard_id)
         end
       end
 
@@ -166,32 +167,34 @@ module Kcl
         @live_workers[worker.id] = worker.alive?
 
         unless @workers[worker.id]
-          Kcl.logger.info(message: "Found new worker", worker:  worker.id)
+          Kcl.logger.info(message: "Found new worker", worker: worker.id)
         end
 
         @workers[worker.id] = worker
       end
 
       @live_workers.each do |worker_id, alive|
-        unless alive
-          heartbeater.cleanup(@workers[worker_id])
-          @workers.delete(worker_id)
-          @live_workers.delete(worker_id)
-          Kcl.logger.info(message: "Remove worker", worker:  worker_id)
-        end
+        next if alive
+
+        heartbeater.cleanup(@workers[worker_id])
+        @workers.delete(worker_id)
+        @live_workers.delete(worker_id)
+        Kcl.logger.info(message: "Remove worker", worker: worker_id)
       end
 
       @workers
     end
 
     def current_state
-      active_shards.group_by do |shard_id, shard|
+      result = active_shards.group_by do |_shard_id, shard|
         shard.potential_owner
-      end.transform_values { |v| v.map(&:first) }.reverse_merge(@id => [])
+      end
+
+      result.transform_values { |v| v.map(&:first) }.reverse_merge(@id => [])
     end
 
     def active_shards
-      @shards.reject { |shard_id, shard| shard.completed? }
+      @shards.reject { |_shard_id, shard| shard.completed? }
     end
 
     def count_stats
@@ -210,45 +213,44 @@ module Kcl
     end
 
     # Count the number of leases hold by worker excluding the processed shard
+    # rubocop:disable Metrics/AbcSize
     def rebalance_shards!
       stats = count_stats
 
       active_shards.each do |shard_id, shard|
-        # puts "#{shard_id}: #{shard.lease_owner} #{shard.lease_owner == @id ? ' (me)' : ''} -> #{shard.pending_owner} #{shard.pending_owner == @id ? ' (me)' : ''}"
         if shard.potential_owner && shard.potential_owner != @id && @consumers[shard_id] && !@consumers[shard_id][:stop]
           Kcl.logger.info(message: "soft release", shard: shard)
           @consumers[shard_id][:stop] = true
         end
-      end
 
-      active_shards.each do |shard_id, shard|
         next if shard.potential_owner == @id
         break if stats[:desired_state][@id].count >= stats[:shards_per_worker]
 
-        if @workers[shard.potential_owner].blank? || shard.abendoned? || stats[:desired_state][shard.potential_owner].count > stats[:shards_per_worker]
-          shard_to_move = stats[:desired_state][shard.potential_owner].delete(shard_id)
-          stats[:desired_state][@id].push(shard_to_move)
-          @shards[shard_id] = checkpointer.ask_for_lease(shard, @id)
-          Kcl.logger.info(message: "ask release", shard: shard)
-        end
+        next unless @workers[shard.potential_owner].blank? || shard.abendoned? ||
+          stats[:desired_state][shard.potential_owner].count > stats[:shards_per_worker]
+
+        shard_to_move = stats[:desired_state][shard.potential_owner].delete(shard_id)
+        stats[:desired_state][@id].push(shard_to_move)
+        @shards[shard_id] = checkpointer.ask_for_lease(shard, @id)
+        Kcl.logger.info(message: "ask release", shard: shard)
       end
 
       if stats[:desired_state] != stats[:current_state]
         Kcl.logger.info(message: "Rebalancing...", **stats)
       end
-
     rescue Aws::DynamoDB::Errors::ConditionalCheckFailedException
-      Kcl.logger.error(message: "Rebalance failed", shard: shard, to: @id)
+      Kcl.logger.error(message: "Rebalance failed", to: @id)
     end
+    # rubocop:enable Metrics/AbcSize
 
     def cleanup_dead_consumers
-      @consumers.delete_if { |shard, consumer| !consumer.alive? }
+      @consumers.delete_if { |_shard_id, consumer| !consumer.alive? }
     end
 
     # Process records by shard
     def consume_shards!
       active_shards.each do |shard_id, shard|
-        next if @consumers[shard_id] && @consumers[shard_id].alive?
+        next if @consumers[shard_id]&.alive?
 
         # the shard has owner already
         next unless shard.can_be_processed_by?(@id)
@@ -276,37 +278,37 @@ module Kcl
 
     private
 
-    def kinesis
-      if @kinesis.nil?
-        @kinesis = Kcl::Proxies::KinesisProxy.new(Kcl.config)
-        Kcl.logger.info(message: "Created Kinesis session in worker")
-      end
-      @kinesis
-    end
-
-    def checkpointer
-      if @checkpointer.nil?
-        @checkpointer = Kcl::Checkpointer.new(Kcl.config)
-        Kcl.logger.info(message: "Created Checkpoint in worker")
-      end
-      @checkpointer
-    end
-
-    def heartbeater
-      if @heartbeater.nil?
-        @heartbeater = Kcl::Heartbeater.new(Kcl.config)
-        @liveness_timeout = @heartbeater.fetch_liveness(self)
+      def kinesis
+        if @kinesis.nil?
+          @kinesis = Kcl::Proxies::KinesisProxy.new(Kcl.config)
+          Kcl.logger.info(message: "Created Kinesis session in worker")
+        end
+        @kinesis
       end
 
-      @heartbeater
-    end
+      def checkpointer
+        if @checkpointer.nil?
+          @checkpointer = Kcl::Checkpointer.new(Kcl.config)
+          Kcl.logger.info(message: "Created Checkpoint in worker")
+        end
+        @checkpointer
+      end
 
-    def trap_signals
-      [:HUP, :INT, :TERM].each do |signal|
-        trap signal do
-          EM.add_timer(0) { shutdown(signal) }
+      def heartbeater
+        if @heartbeater.nil?
+          @heartbeater = Kcl::Heartbeater.new(Kcl.config)
+          @liveness_timeout = @heartbeater.fetch_liveness(self)
+        end
+
+        @heartbeater
+      end
+
+      def trap_signals
+        %i[HUP INT TERM].each do |signal|
+          trap signal do
+            EM.add_timer(0) { shutdown(signal) }
+          end
         end
       end
-    end
   end
 end

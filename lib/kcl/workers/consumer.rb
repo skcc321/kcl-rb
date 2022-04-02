@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Kcl
   module Workers
     # Shard : Consumer = 1 : 1
@@ -31,12 +33,15 @@ module Kcl
 
           shard_iterator = result[:next_shard_iterator]
           break if !shard_iterator || shard_iterator.empty? || Thread.current[:stop]
+
           sleep(0.1)
         end
 
-        shutdown_reason = shard_iterator.nil? ?
-          Kcl::Workers::ShutdownReason::TERMINATE :
+        shutdown_reason = if shard_iterator.nil?
+          Kcl::Workers::ShutdownReason::TERMINATE
+        else
           Kcl::Workers::ShutdownReason::REQUESTED
+        end
         shutdown_input = create_shutdown_input(shutdown_reason, record_checkpointer)
         @record_processor.shutdown(shutdown_input)
       end

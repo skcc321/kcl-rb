@@ -1,0 +1,14 @@
+runner:
+  undercover:
+    cmd: bundle exec undercover-checkstyle --compare origin/${GITHUB_BASE_REF}
+    level: warning
+    format: checkstyle
+    name: Undercover
+  rubocop:
+    cmd: bundle exec rubocop
+    errorformat:
+      - "%A%f:%l %t: %m"
+      - "%Z```%$"
+      - "%C%.%#"
+    name: Rubocop
+    level: error

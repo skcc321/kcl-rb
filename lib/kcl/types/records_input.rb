@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Kcl
   module Types
     # Container for the parameters to the IRecordProcessor's method.

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Kcl
   module Workers
     class WorkerInfo
@@ -15,6 +17,7 @@ module Kcl
 
       def liveness_timeout_datetime
         return nil if liveness_timeout.to_s.empty?
+
         Time.parse(liveness_timeout)
       end
 

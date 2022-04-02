@@ -1,93 +1,140 @@
 AllCops:
+  NewCops: enable
   Exclude:
     - "vendor/**/*"
     - "demo/vendor/**/*"
-  DisplayCopNames: true
 
-Layout/ArgumentAlignment:
-  Enabled: false
-
-Layout/ExtraSpacing:
-  Enabled: false
-
-Layout/HashAlignment:
-  Enabled: false
+Lint/ConstantDefinitionInBlock:
+  Exclude:
+    - spec/**/*
 
 Lint/NonDeterministicRequireOrder:
   Enabled: false
 
-Layout/SpaceAroundOperators:
-  Enabled: false
-
-Metrics/AbcSize:
-  Enabled: false
-
-Metrics/BlockLength:
-  Enabled: false
-
-Metrics/ClassLength:
-  Max: 300
-
-Metrics/MethodLength:
-  Max: 50
-
 Naming/MemoizedInstanceVariableName:
   Enabled: false
+
+Layout/ArgumentAlignment:
+  EnforcedStyle: with_fixed_indentation
+
+Layout/CaseIndentation:
+  EnforcedStyle: end
+
+Layout/EndAlignment:
+  EnforcedStyleAlignWith: variable
+
+Layout/FirstArgumentIndentation:
+  EnforcedStyle: consistent
+
+Layout/FirstArrayElementIndentation:
+  EnforcedStyle: consistent
+
+Layout/FirstMethodArgumentLineBreak:
+  Enabled: true
+  Exclude:
+    - spec/**/*.rb
+    - test/**/*.rb
+
+Layout/IndentationConsistency:
+  EnforcedStyle: indented_internal_methods
+
+Layout/MultilineAssignmentLayout:
+  Enabled: true
+  EnforcedStyle: same_line
+
+Layout/MultilineMethodCallBraceLayout:
+  EnforcedStyle: new_line
+  Exclude:
+    - spec/**/*.rb
+    - test/**/*.rb
+
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+
+Layout/MultilineOperationIndentation:
+  EnforcedStyle: indented
+
+# Incompatible with RSpec idioms
+# https://github.com/rubocop/rubocop/issues/4222
+Lint/AmbiguousBlockAssociation:
+  Exclude:
+    - spec/**/*
+
+Lint/AssignmentInCondition:
+  Enabled: false
+
+Lint/UnderscorePrefixedVariableName:
+  AllowKeywordBlockArguments: true
+
+Metrics/AbcSize:
+  Max: 35
+
+Metrics/BlockLength:
+  Exclude:
+    - Gemfile
+    - "*.gemspec"
+    - spec/**/*.rb
+
+Metrics/ClassLength:
+  Max: 250
+  Exclude:
+    - spec/**/*.rb
 
 Metrics/CyclomaticComplexity:
   Max: 15
 
 Metrics/PerceivedComplexity:
-  Max: 15
+  Max: 20
 
-# 日本語のコメントを許可する
-Style/AsciiComments:
+Metrics/MethodLength:
+  Max: 50
+  CountAsOne: ['array', 'heredoc', 'hash']
+
+Naming/VariableNumber:
+  EnforcedStyle: snake_case
+  Exclude:
+    - "**/config/routes.rb"
+
+# can I remove?
+Style/BlockComments:
   Enabled: false
 
-Style/ClassAndModuleChildren:
-  EnforcedStyle: nested
+Style/BlockDelimiters:
+  IgnoredMethods:
+    - lambda
+    - proc
 
 Style/Documentation:
   Enabled: false
 
-Style/EmptyLineAfterGuardClause:
-  Enabled: false
+Style/FormatStringToken:
+  EnforcedStyle: template
 
-Style/EmptyMethod:
-  Enabled: false
-
-Style/FrozenStringLiteralComment:
-  Enabled: false
-
-Style/GuardClause:
-  MinBodyLength: 5
-
-Style/HashSyntax:
-  Enabled: false
-
+# can I remove?
 Style/IfUnlessModifier:
   Enabled: false
 
-Style/MultilineTernaryOperator:
+Style/Lambda:
+  EnforcedStyle: literal
+
+Style/LambdaCall:
+  EnforcedStyle: braces
+
+Style/NegatedIf:
   Enabled: false
 
+# can I remove it?
 Style/NumericPredicate:
   Enabled: false
 
-Style/RaiseArgs:
+Style/ParallelAssignment:
   Enabled: false
 
-Style/RedundantBegin:
-  Enabled: false
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
 
-Style/RedundantInterpolation:
-  Enabled: false
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: double_quotes
 
-Style/RedundantSelf:
-  Enabled: false
-
-Style/RescueStandardError:
-  Enabled: false
-
-Style/SymbolArray:
-  Enabled: false
+Style/SymbolProc:
+  AllowMethodsWithArguments: true

@@ -1,8 +1,10 @@
-require 'spec_helper'
+# frozen_string_literal: true
+
+require "spec_helper"
 
 RSpec.describe Kcl::Workers::Consumer do
-  include_context 'use_kinesis'
-  include_context 'use_record_processor'
+  include_context "use_kinesis"
+  include_context "use_record_processor"
 
   let(:target_shard) { nil }
   let(:record_processor) { MockRecordProcessor.new }
@@ -11,24 +13,24 @@ RSpec.describe Kcl::Workers::Consumer do
     Kcl::Workers::Consumer.new(target_shard, record_processor, kinesis, checkpointer)
   end
 
-  describe '#start_shard_iterator' do
+  describe "#start_shard_iterator" do
     let(:target_shard) { shard }
     subject { consumer.start_shard_iterator }
     it { expect(subject).not_to be_nil }
   end
 
-  describe '#consume!' do
+  describe "#consume!" do
     before do
       # mock shard
       checkpointer.fetch_checkpoint(target_shard)
-      checkpointer.lease(target_shard, 'test-worker')
+      checkpointer.lease(target_shard, "test-worker")
     end
 
     after do
       checkpointer.remove_lease_owner(target_shard)
     end
 
-    context 'with no record' do
+    context "with no record" do
       let(:target_shard) { shard }
 
       before do
@@ -46,7 +48,7 @@ RSpec.describe Kcl::Workers::Consumer do
       end
     end
 
-    context 'with a record' do
+    context "with a record" do
       let(:target_shard) { shard_shadow }
 
       before do
@@ -54,8 +56,8 @@ RSpec.describe Kcl::Workers::Consumer do
         kinesis.put_record(
           {
             stream_name: Kcl.config.kinesis_stream_name,
-            data: Base64.strict_encode64('test'),
-            partition_key: 'a'
+            data: Base64.strict_encode64("test"),
+            partition_key: "a"
           }
         )
 

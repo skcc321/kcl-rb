@@ -1,4 +1,6 @@
-require 'aws-sdk-kinesis'
+# frozen_string_literal: true
+
+require "aws-sdk-kinesis"
 
 module Kcl
   module Proxies

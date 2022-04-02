@@ -1,5 +1,7 @@
-require 'logger'
+# frozen_string_literal: true
+
+require "logger"
 
 module Kcl
-  class Logger < ::Logger;   end
+  class Logger < ::Logger; end
 end

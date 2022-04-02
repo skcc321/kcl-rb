@@ -1,18 +1,20 @@
-require 'spec_helper'
+# frozen_string_literal: true
+
+require "spec_helper"
 
 RSpec.describe Kcl::Checkpointer do
-  include_context 'use_kinesis'
+  include_context "use_kinesis"
 
   let(:checkpointer) { Kcl::Checkpointer.new(Kcl.config) }
 
-  describe '#initialize' do
-    it 'exists dynamodb table' do
+  describe "#initialize" do
+    it "exists dynamodb table" do
       dynamodb = checkpointer.dynamodb
       expect(dynamodb.exists?(Kcl.config.dynamodb_table_name)).to be_truthy
     end
   end
 
-  describe '#fetch_checkpoint' do
+  describe "#fetch_checkpoint" do
     subject { checkpointer.fetch_checkpoint(shard) }
 
     it do
@@ -22,10 +24,10 @@ RSpec.describe Kcl::Checkpointer do
     end
   end
 
-  describe '#update_checkpoint' do
+  describe "#update_checkpoint" do
     before do
       shard.checkpoint = Kcl::Checkpoints::Sentinel::SHARD_END
-      shard.assigned_to = 'test-worker'
+      shard.assigned_to = "test-worker"
       shard.lease_timeout = (Time.now.utc + Kcl.config.dynamodb_failover_seconds).to_s
       checkpointer.update_checkpoint(shard)
     end
@@ -37,8 +39,8 @@ RSpec.describe Kcl::Checkpointer do
     end
   end
 
-  describe '#lease' do
-    let(:next_assigned_to) { 'test-worker' }
+  describe "#lease" do
+    let(:next_assigned_to) { "test-worker" }
 
     before do
       checkpointer.lease(checkpointer.fetch_checkpoint(shard), next_assigned_to)
@@ -48,12 +50,12 @@ RSpec.describe Kcl::Checkpointer do
 
     it do
       expect(subject.assigned_to).to eql(next_assigned_to)
-      expect(subject.lease_timeout).not_to eql('')
+      expect(subject.lease_timeout).not_to eql("")
     end
   end
 
-  describe '#remove_lease' do
-    let(:next_assigned_to) { 'test-worker' }
+  describe "#remove_lease" do
+    let(:next_assigned_to) { "test-worker" }
 
     before do
       checkpointer.lease(checkpointer.fetch_checkpoint(shard), next_assigned_to)
@@ -68,8 +70,8 @@ RSpec.describe Kcl::Checkpointer do
     end
   end
 
-  describe '#remove_lease_owner' do
-    let(:next_assigned_to) { 'test-worker' }
+  describe "#remove_lease_owner" do
+    let(:next_assigned_to) { "test-worker" }
 
     before do
       checkpointer.lease(shard, next_assigned_to)

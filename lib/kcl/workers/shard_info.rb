@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Kcl
   module Workers
     class ShardInfo
@@ -16,8 +18,8 @@ module Kcl
         @parent_shard_id = parent_shard_id || 0
         @starting_sequence_number = sequence_number_range[:starting_sequence_number]
         @ending_sequence_number   = sequence_number_range[:ending_sequence_number]
-        @assigned_to     = nil
-        @reassigned_to     = nil
+        @assigned_to = nil
+        @reassigned_to = nil
         @checkpoint      = nil
         @lease_timeout   = nil
       end
@@ -51,12 +53,13 @@ module Kcl
       end
 
       def can_be_processed_by?(id)
-          # another worker abandoned the shard I got new_owner
-          (lease_owner != id && abendoned? && pending_owner == id)
+        # another worker abandoned the shard I got new_owner
+        (lease_owner != id && abendoned? && pending_owner == id)
       end
 
       def lease_timeout_datetime
         return nil if lease_timeout.to_s.empty?
+
         Time.parse(lease_timeout)
       end
 

@@ -1,13 +1,15 @@
-require 'time'
+# frozen_string_literal: true
+
+require "time"
 
 module Kcl
   class Checkpointer
-    DYNAMO_DB_LEASE_PRIMARY_KEY = 'shard_id'.freeze
-    DYNAMO_DB_LEASE_OWNER_KEY   = 'assigned_to'.freeze
-    DYNAMO_DB_LEASE_PENDING_OWNER_KEY   = 'reassigned_to'.freeze
-    DYNAMO_DB_LEASE_TIMEOUT_KEY = 'lease_timeout'.freeze
-    DYNAMO_DB_CHECKPOINT_SEQUENCE_NUMBER_KEY = 'checkpoint'.freeze
-    DYNAMO_DB_PARENT_SHARD_KEY  = 'parent_shard_id'.freeze
+    DYNAMO_DB_LEASE_PRIMARY_KEY = "shard_id"
+    DYNAMO_DB_LEASE_OWNER_KEY   = "assigned_to"
+    DYNAMO_DB_LEASE_PENDING_OWNER_KEY = "reassigned_to"
+    DYNAMO_DB_LEASE_TIMEOUT_KEY = "lease_timeout"
+    DYNAMO_DB_CHECKPOINT_SEQUENCE_NUMBER_KEY = "checkpoint"
+    DYNAMO_DB_PARENT_SHARD_KEY = "parent_shard_id"
 
     attr_reader :dynamodb
 
@@ -17,15 +19,16 @@ module Kcl
       @table_name = config.dynamodb_table_name
 
       return if @dynamodb.exists?(@table_name)
+
       @dynamodb.create_table(
         @table_name,
         [{
           attribute_name: DYNAMO_DB_LEASE_PRIMARY_KEY,
-          attribute_type: 'S'
+          attribute_type: "S"
         }],
         [{
           attribute_name: DYNAMO_DB_LEASE_PRIMARY_KEY,
-          key_type: 'HASH'
+          key_type: "HASH"
         }],
         {
           read_capacity_units: config.dynamodb_read_capacity,
@@ -41,7 +44,7 @@ module Kcl
     def fetch_checkpoint(shard)
       checkpoint = @dynamodb.get_item(
         @table_name,
-        { "#{DYNAMO_DB_LEASE_PRIMARY_KEY}" => shard.shard_id }
+        { DYNAMO_DB_LEASE_PRIMARY_KEY.to_s => shard.shard_id }
       )
       return shard if checkpoint.nil?
 
@@ -67,11 +70,11 @@ module Kcl
     # @return [Kcl::Workers::ShardInfo]
     def update_checkpoint(shard)
       item = {
-        "#{DYNAMO_DB_LEASE_PRIMARY_KEY}" => shard.shard_id,
-        "#{DYNAMO_DB_CHECKPOINT_SEQUENCE_NUMBER_KEY}" => shard.checkpoint,
-        "#{DYNAMO_DB_LEASE_OWNER_KEY}" => shard.lease_owner,
-        "#{DYNAMO_DB_LEASE_PENDING_OWNER_KEY}" => shard.pending_owner,
-        "#{DYNAMO_DB_LEASE_TIMEOUT_KEY}" => shard.lease_timeout
+        DYNAMO_DB_LEASE_PRIMARY_KEY.to_s => shard.shard_id,
+        DYNAMO_DB_CHECKPOINT_SEQUENCE_NUMBER_KEY.to_s => shard.checkpoint,
+        DYNAMO_DB_LEASE_OWNER_KEY.to_s => shard.lease_owner,
+        DYNAMO_DB_LEASE_PENDING_OWNER_KEY.to_s => shard.pending_owner,
+        DYNAMO_DB_LEASE_TIMEOUT_KEY.to_s => shard.lease_timeout
       }
 
       if shard.parent_shard_id != 0
@@ -94,31 +97,32 @@ module Kcl
     # @params [Kcl::Workers::ShardInfo] shard
     # @params [String] next_assigned_to
     # @return [Kcl::Workers::ShardInfo]
+    # rubocop:disable Metrics/AbcSize
     def lease(shard, next_assigned_to, ask: false)
       now = Time.now.utc
       next_lease_timeout = now + Kcl.config.dynamodb_failover_seconds
 
-      item_exists = @dynamodb.get_item(@table_name, { "#{DYNAMO_DB_LEASE_PRIMARY_KEY}" => shard.shard_id })
+      item_exists = @dynamodb.get_item(@table_name, { DYNAMO_DB_LEASE_PRIMARY_KEY.to_s => shard.shard_id })
 
       if item_exists && shard.lease_timeout
-        condition_expression = 'shard_id = :shard_id AND lease_timeout = :lease_timeout'
+        condition_expression = "shard_id = :shard_id AND lease_timeout = :lease_timeout"
         expression_attributes = {
-          ':shard_id' => shard.shard_id,
-          ':lease_timeout' => shard.lease_timeout
+          ":shard_id" => shard.shard_id,
+          ":lease_timeout" => shard.lease_timeout
         }
       elsif item_exists
-        condition_expression = 'shard_id = :shard_id AND attribute_not_exists(lease_timeout)'
+        condition_expression = "shard_id = :shard_id AND attribute_not_exists(lease_timeout)"
         expression_attributes = {
-          ':shard_id' => shard.shard_id
+          ":shard_id" => shard.shard_id
         }
       else
-        condition_expression = 'attribute_not_exists(lease_timeout)'
+        condition_expression = "attribute_not_exists(lease_timeout)"
         expression_attributes = nil
       end
 
       item = {
-        "#{DYNAMO_DB_LEASE_PRIMARY_KEY}" => shard.shard_id,
-        "#{DYNAMO_DB_LEASE_TIMEOUT_KEY}" => next_lease_timeout.to_s
+        DYNAMO_DB_LEASE_PRIMARY_KEY.to_s => shard.shard_id,
+        DYNAMO_DB_LEASE_TIMEOUT_KEY.to_s => next_lease_timeout.to_s
       }
 
       if ask
@@ -128,7 +132,7 @@ module Kcl
         item[DYNAMO_DB_LEASE_OWNER_KEY] = next_assigned_to
       end
 
-      if shard.checkpoint != ''
+      if shard.checkpoint != ""
         item[DYNAMO_DB_CHECKPOINT_SEQUENCE_NUMBER_KEY] = shard.checkpoint
       end
 
@@ -156,6 +160,7 @@ module Kcl
 
       shard
     end
+    # rubocop:enable Metrics/AbcSize
 
     # Remove the shard entry
     # @params [Kcl::Workers::ShardInfo] shard
@@ -163,7 +168,7 @@ module Kcl
     def remove_lease(shard)
       result = @dynamodb.remove_item(
         @table_name,
-        { "#{DYNAMO_DB_LEASE_PRIMARY_KEY}" => shard.shard_id }
+        { DYNAMO_DB_LEASE_PRIMARY_KEY.to_s => shard.shard_id }
       )
       if result
         shard.lease_owner   = nil
@@ -182,7 +187,7 @@ module Kcl
     def remove_lease_owner(shard)
       result = @dynamodb.update_item(
         @table_name,
-        { "#{DYNAMO_DB_LEASE_PRIMARY_KEY}" => shard.shard_id },
+        { DYNAMO_DB_LEASE_PRIMARY_KEY.to_s => shard.shard_id },
         "remove #{DYNAMO_DB_LEASE_OWNER_KEY}, #{DYNAMO_DB_LEASE_TIMEOUT_KEY}"
       )
       if result

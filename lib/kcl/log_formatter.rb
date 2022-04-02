@@ -24,7 +24,7 @@ module Kcl
         return {} unless Thread.current[:uuid]
 
         {
-          uuid: Thread.current[:uuid],
+          uuid: Thread.current[:uuid]
         }
       end
 

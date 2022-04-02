@@ -2,6 +2,7 @@
 /terraform/terraform.tfstate*
 /terraform/.terraform
 /vendor
+/coverage
 
 /demo/.bundle/
 /demo/terraform/terraform.tfstate*
