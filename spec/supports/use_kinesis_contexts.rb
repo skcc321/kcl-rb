@@ -1,4 +1,7 @@
-RSpec.shared_context 'use_kinesis' do
+# typed: false
+# frozen_string_literal: true
+
+RSpec.shared_context "use_kinesis" do
   let(:kinesis) { Kcl::Proxies::KinesisProxy.new(Kcl.config) }
   let(:kinesis_shards) { kinesis.shards }
   let(:shard_shadow) do

@@ -1,10 +1,12 @@
-require 'bundler/setup'
-require 'pry'
+# frozen_string_literal: true
 
-require 'kcl'
-require_relative './lib/kcl_demo'
+require "bundler/setup"
+require "pry"
 
-task :default => :run
+require "kcl"
+require_relative "./lib/kcl_demo"
+
+task default: :run
 task :run do
   KclDemo::App.initialize
   KclDemo::App.run
@@ -12,9 +14,9 @@ end
 
 task :seed do
   KclDemo::App.initialize
-  record_count = Integer(ENV['RECORD_COUNT'] ||0)
+  record_count = Integer(ENV["RECORD_COUNT"] || 0)
   if record_count.zero?
-    puts 'Set over 1 for RECORD_COUNT'
+    puts "Set over 1 for RECORD_COUNT"
     return
   end
   KclDemo::App.seed(record_count)

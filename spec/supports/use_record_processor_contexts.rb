@@ -1,10 +1,13 @@
-RSpec.shared_context 'use_record_processor' do
+# typed: true
+# frozen_string_literal: true
+
+RSpec.shared_context "use_record_processor" do
   class MockRecordProcessor < Kcl::RecordProcessor
-    def after_initialize(initialization_input)
-    end
+    def after_initialize(initialization_input); end
 
     def process_records(records_input)
       return if records_input.records.empty?
+
       records_input.records.each do |record|
         process_record(record)
       end
@@ -17,9 +20,9 @@ RSpec.shared_context 'use_record_processor' do
     end
 
     def shutdown(shutdown_input)
-      if shutdown_input.shutdown_reason == Kcl::Workers::ShutdownReason::TERMINATE
-        shutdown_input.record_checkpointer.update_checkpoint(nil)
-      end
+      return unless shutdown_input.shutdown_reason == Kcl::Workers::ShutdownReason::TERMINATE
+
+      shutdown_input.record_checkpointer.update_checkpoint(nil)
     end
   end
 end

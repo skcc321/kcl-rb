@@ -1,3 +1,6 @@
+# typed: true
+# frozen_string_literal: true
+
 module Kcl
   module Workers
     class RecordCheckpointer

@@ -1,3 +1,4 @@
+# typed: ignore
 # frozen_string_literal: true
 
 # KclR json log formatter with datadog tracing
@@ -24,7 +25,7 @@ module Kcl
         return {} unless Thread.current[:uuid]
 
         {
-          uuid: Thread.current[:uuid],
+          uuid: Thread.current[:uuid]
         }
       end
 

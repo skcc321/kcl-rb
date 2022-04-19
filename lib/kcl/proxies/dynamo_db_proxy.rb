@@ -1,4 +1,7 @@
-require 'aws-sdk-dynamodb'
+# typed: true
+# frozen_string_literal: true
+
+require "aws-sdk-dynamodb"
 
 module Kcl
   module Proxies

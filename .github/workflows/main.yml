@@ -13,46 +13,93 @@ on:
       - '**.txt'
 
 jobs:
-  build:
+  linters:
     runs-on: ubuntu-latest
+
+    env:
+      RUBYOPT: -EUTF-8
 
     steps:
     - name: Checkout
       uses: actions/checkout@v2
 
+    - name: Set up Ruby 2.7
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 2.7
+        bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+
+    - name: Setup Reviewdog
+      uses: reviewdog/action-setup@v1
+      with:
+        reviewdog_version: latest
+
+    - name: Run Rubocop
+      run: reviewdog -reporter=github-pr-review -tee -runners=Rubocop -fail-on-error=true
+      env:
+        REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  typecheck:
+    runs-on: ubuntu-latest
+
+    env:
+      RUBYOPT: -EUTF-8
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Set up Ruby 2.7
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 2.7
+        bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+
+    - name: Run sorbet
+      run: bundle exec srb
+  testing:
+    runs-on: ubuntu-latest
+
+    env:
+      RUBYOPT: -EUTF-8
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Set up Ruby 2.7
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 2.7
+        bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+
+    - name: Setup Reviewdog
+      uses: reviewdog/action-setup@v1
+      with:
+        reviewdog_version: latest
+
     - name: Up docker-compose
       run: docker-compose -f docker-compose.yml up -d
 
-    - name: Sleep for 30 seconds
-      uses: jakejarvis/wait-action@master
-      with:
-        time: '30s'
+    - name: Sleep for 10 seconds
+      run: sleep 10s
+      shell: bash
 
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v1
       with:
         terraform_version: 0.12.24
+
     - id: init
-      run: terraform init
       working-directory: ${{ github.workspace }}/terraform
-    - id: apply
-      run: terraform apply -auto-approve -no-color
-      working-directory: ${{ github.workspace }}/terraform
-
-    - name: Set up Ruby 2.7
-      uses: actions/setup-ruby@v1
-      with:
-        ruby-version: 2.7
-
-    - name: Bundle install
       run: |
-        gem install bundler
-        bundle install --jobs 4 --retry 3
+        terraform init
+        terraform apply -auto-approve -no-color
 
-    - name: Rubocop
+    - name: RSpec & Undercover
+      env:
+        REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        bundle exec rubocop
-
-    - name: RSpec
-      run: |
+        source .env
         bundle exec rspec
+        git fetch
+        reviewdog -reporter=github-pr-review -tee -runners=Undercover

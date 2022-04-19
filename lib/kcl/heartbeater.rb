@@ -1,10 +1,13 @@
-require 'time'
+# typed: true
+# frozen_string_literal: true
+
+require "time"
 require "kcl/workers/worker_info"
 
 module Kcl
   class Heartbeater
-    DYNAMO_DB_LIVENESS_PRIMARY_KEY = 'worker_id'.freeze
-    DYNAMO_DB_LIVENESS_TIMEOUT_KEY = 'liveness_timeout'.freeze
+    DYNAMO_DB_LIVENESS_PRIMARY_KEY = "worker_id"
+    DYNAMO_DB_LIVENESS_TIMEOUT_KEY = "liveness_timeout"
 
     attr_reader :dynamodb
 
@@ -14,15 +17,16 @@ module Kcl
       @table_name = config.workers_health_table_name
 
       return if @dynamodb.exists?(@table_name)
+
       @dynamodb.create_table(
         @table_name,
         [{
           attribute_name: DYNAMO_DB_LIVENESS_PRIMARY_KEY,
-          attribute_type: 'S'
+          attribute_type: "S"
         }],
         [{
           attribute_name: DYNAMO_DB_LIVENESS_PRIMARY_KEY,
-          key_type: 'HASH'
+          key_type: "HASH"
         }],
         {
           read_capacity_units: config.dynamodb_read_capacity,
@@ -35,7 +39,7 @@ module Kcl
     def fetch_liveness(worker)
       liveness = @dynamodb.get_item(
         @table_name,
-        { "#{DYNAMO_DB_LIVENESS_PRIMARY_KEY}" => worker.id }
+        { DYNAMO_DB_LIVENESS_PRIMARY_KEY.to_s => worker.id }
       )
       return if liveness.nil?
 
@@ -45,11 +49,11 @@ module Kcl
 
     def ping(worker)
       now = Time.now.utc
-      next_liveness_timeout = now + Kcl.config.sync_interval_seconds * 2
+      next_liveness_timeout = now + (Kcl.config.sync_interval_seconds * 2)
 
       item = {
-        "#{DYNAMO_DB_LIVENESS_PRIMARY_KEY}" => worker.id,
-        "#{DYNAMO_DB_LIVENESS_TIMEOUT_KEY}" => next_liveness_timeout.to_s
+        DYNAMO_DB_LIVENESS_PRIMARY_KEY.to_s => worker.id,
+        DYNAMO_DB_LIVENESS_TIMEOUT_KEY.to_s => next_liveness_timeout.to_s
       }
 
       result = @dynamodb.put_item(@table_name, item)
@@ -83,7 +87,7 @@ module Kcl
     def cleanup(worker)
       result = @dynamodb.remove_item(
         @table_name,
-        { "#{DYNAMO_DB_LIVENESS_PRIMARY_KEY}" => worker.id }
+        { DYNAMO_DB_LIVENESS_PRIMARY_KEY.to_s => worker.id }
       )
 
       if result

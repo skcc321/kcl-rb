@@ -1,3 +1,6 @@
+# typed: true
+# frozen_string_literal: true
+
 module Kcl
   class Config
     attr_accessor :dynamodb_endpoint,

@@ -1,3 +1,6 @@
+# typed: true
+# frozen_string_literal: true
+
 module Kcl
   module Types
     # Container for the parameters to the RecordProcessor's method.

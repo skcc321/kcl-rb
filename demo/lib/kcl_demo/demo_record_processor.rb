@@ -1,4 +1,7 @@
-require 'pry'
+# typed: true
+# frozen_string_literal: true
+
+require "pry"
 
 module KclDemo
   class DemoRecordProcessor < Kcl::RecordProcessor
@@ -32,9 +35,9 @@ module KclDemo
     def shutdown(shutdown_input)
       Kcl.logger.info(message: "Shutdown", reason: shutdown_input.shutdown_reason)
 
-      if shutdown_input.shutdown_reason == Kcl::Workers::ShutdownReason::TERMINATE
-        shutdown_input.record_checkpointer.update_checkpoint(nil)
-      end
+      return unless shutdown_input.shutdown_reason == Kcl::Workers::ShutdownReason::TERMINATE
+
+      shutdown_input.record_checkpointer.update_checkpoint(nil)
     end
   end
 end

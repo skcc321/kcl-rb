@@ -1,17 +1,20 @@
-require 'json'
-require 'securerandom'
+# typed: true
+# frozen_string_literal: true
 
-require_relative './kcl_demo/demo_record_processor'
-require_relative './kcl_demo/demo_record_processor_factory'
+require "json"
+require "securerandom"
+
+require_relative "./kcl_demo/demo_record_processor"
+require_relative "./kcl_demo/demo_record_processor_factory"
 
 module KclDemo
   class App
     def self.initialize
       Kcl.configure do |config|
-        config.dynamodb_endpoint = 'https://localhost:4566'
-        config.dynamodb_table_name = 'kcl-rb-demo'
-        config.kinesis_endpoint = 'https://localhost:4566'
-        config.kinesis_stream_name = 'kcl-rb-demo'
+        config.dynamodb_endpoint = "https://localhost:4566"
+        config.dynamodb_table_name = "kcl-rb-demo"
+        config.kinesis_endpoint = "https://localhost:4566"
+        config.kinesis_stream_name = "kcl-rb-demo"
       end
     end
 
@@ -21,7 +24,7 @@ module KclDemo
 
     def self.run
       factory = KclDemo::DemoRecordProcessorFactory.new
-      Kcl::Worker.run('kcl-demo', factory)
+      Kcl::Worker.run("kcl-demo", factory)
     end
 
     def self.seed(record_count = 1000)

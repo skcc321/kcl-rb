@@ -1,4 +1,7 @@
-require 'bigdecimal'
+# typed: true
+# frozen_string_literal: true
+
+require "bigdecimal"
 
 module Kcl
   module Types
@@ -11,17 +14,17 @@ module Kcl
 
       # @return [Kcl::Types::ExtendedSequenceNumber]
       def self.latest
-        @_latest ||= self.new(Kcl::Checkpoints::Sentinel::LATEST)
+        @_latest ||= new(Kcl::Checkpoints::Sentinel::LATEST)
       end
 
       # @return [Kcl::Types::ExtendedSequenceNumber]
       def self.shard_end
-        @_shard_end ||= self.new(Kcl::Checkpoints::Sentinel::SHARD_END)
+        @_shard_end ||= new(Kcl::Checkpoints::Sentinel::SHARD_END)
       end
 
       # @return [Kcl::Types::ExtendedSequenceNumber]
       def self.trim_horizon
-        @_trim_horizon ||= self.new(Kcl::Checkpoints::Sentinel::TRIM_HORIZON)
+        @_trim_horizon ||= new(Kcl::Checkpoints::Sentinel::TRIM_HORIZON)
       end
 
       # @param [String] str
@@ -48,6 +51,7 @@ module Kcl
       # @return [Boolean]
       def self.digits?(str)
         return false if str.nil? || str.empty?
+
         (str =~ /\A[0-9]+\z/) != nil
       end
 
@@ -72,9 +76,8 @@ module Kcl
         when Kcl::Checkpoints::Sentinel::AT_TIMESTAMP
           AT_TIMESTAMP_VALUE
         else
-          raise Kcl::Errors::IllegalArgumentError.new(
-            'Expected a string of digits, TRIM_HORIZON, LATEST or AT_TIMESTAMP but received ' + @sequence_number
-          )
+          raise Kcl::Errors::IllegalArgumentError,
+            "Expected a string of digits, TRIM_HORIZON, LATEST or AT_TIMESTAMP but received #{@sequence_number}"
         end
       end
 
@@ -84,6 +87,7 @@ module Kcl
         if @sequence_number != extended_sequence_number.sequence_number
           return false
         end
+
         @sub_sequence_number == extended_sequence_number.sub_sequence_number
       end
     end

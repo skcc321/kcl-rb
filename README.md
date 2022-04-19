@@ -1,5 +1,5 @@
 # kcl-rb
-
+[![CI](https://github.com/skcc321/kcl-rb/actions/workflows/main.yml/badge.svg)](https://github.com/skcc321/kcl-rb/actions/workflows/main.yml)
 ## Overview
 
 The Amazon Kinesis Client Library for Pure Ruby (Amazon KCL) enables Ruby developers to easily consume and process data from [Amazon Kinesis](http://aws.amazon.com/kinesis).
@@ -66,10 +66,11 @@ end
 
 ```rb
 Kcl.configure do |config|
-  config.dynamodb_endpoint = 'https://localhost:4566'
-  config.dynamodb_table_name = 'kcl-rb'
-  config.kinesis_endpoint = 'https://localhost:4566'
-  config.kinesis_stream_name = 'kcl-rb'
+  config.dynamodb_endpoint = "http://localhost:4566"
+  config.dynamodb_table_name = "kcl-rb-test"
+  config.workers_health_table_name = "kcl-rb-test-health"
+  config.kinesis_endpoint = "http://localhost:4566"
+  config.kinesis_stream_name = "kcl-rb-test"
 end
 ```
 

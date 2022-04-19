@@ -1,7 +1,10 @@
+# typed: true
+# frozen_string_literal: true
+
 module Kcl
   class RecordProcessorFactory
     def create_processor
-      raise NotImplementedError.new("You must implement #{self.class}##{__method__}")
+      raise NotImplementedError, "You must implement #{self.class}##{__method__}"
     end
   end
 end
