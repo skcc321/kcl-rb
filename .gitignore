@@ -3,6 +3,8 @@
 /terraform/.terraform
 /vendor
 /coverage
+/docs
+.yardoc
 
 /demo/.bundle/
 /demo/terraform/terraform.tfstate*

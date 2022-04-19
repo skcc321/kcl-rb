@@ -1,3 +1,4 @@
+# typed: strict
 # frozen_string_literal: true
 
 # Enumeration of the sentinel values of checkpoints.

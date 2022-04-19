@@ -13,7 +13,7 @@ on:
       - '**.txt'
 
 jobs:
-  build:
+  linters:
     runs-on: ubuntu-latest
 
     env:
@@ -38,6 +38,44 @@ jobs:
       run: reviewdog -reporter=github-pr-review -tee -runners=Rubocop -fail-on-error=true
       env:
         REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  typecheck:
+    runs-on: ubuntu-latest
+
+    env:
+      RUBYOPT: -EUTF-8
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Set up Ruby 2.7
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 2.7
+        bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+
+    - name: Run sorbet
+      run: bundle exec srb
+  testing:
+    runs-on: ubuntu-latest
+
+    env:
+      RUBYOPT: -EUTF-8
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Set up Ruby 2.7
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 2.7
+        bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+
+    - name: Setup Reviewdog
+      uses: reviewdog/action-setup@v1
+      with:
+        reviewdog_version: latest
 
     - name: Up docker-compose
       run: docker-compose -f docker-compose.yml up -d

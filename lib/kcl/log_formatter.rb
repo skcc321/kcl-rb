@@ -1,3 +1,4 @@
+# typed: ignore
 # frozen_string_literal: true
 
 # KclR json log formatter with datadog tracing
