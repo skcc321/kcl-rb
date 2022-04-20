@@ -2,6 +2,8 @@
 [![CI](https://github.com/skcc321/kcl-rb/actions/workflows/main.yml/badge.svg)](https://github.com/skcc321/kcl-rb/actions/workflows/main.yml)
 ## Overview
 
+[Documentation](https://skcc321.github.io/kcl-rb)
+
 The Amazon Kinesis Client Library for Pure Ruby (Amazon KCL) enables Ruby developers to easily consume and process data from [Amazon Kinesis](http://aws.amazon.com/kinesis).
 
 Already [KCL for Ruby](https://github.com/awslabs/amazon-kinesis-client-ruby) is provided by AWS, but Java is required for the operating environment because MultiLangDaemon is used.
