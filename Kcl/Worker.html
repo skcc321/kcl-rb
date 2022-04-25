@@ -1015,7 +1015,7 @@
       <span class='rparen'>)</span>
       <span class='id identifier rubyid_consumer'>consumer</span><span class='period'>.</span><span class='id identifier rubyid_consume!'>consume!</span>
     <span class='kw'>ensure</span>
-      <span class='id identifier rubyid_checkpointer'>checkpointer</span><span class='period'>.</span><span class='id identifier rubyid_remove_lease_owner'>remove_lease_owner</span><span class='lparen'>(</span><span class='id identifier rubyid_shard_id'>shard_id</span><span class='rparen'>)</span> <span class='comment'># release the shard
+      <span class='id identifier rubyid_checkpointer'>checkpointer</span><span class='period'>.</span><span class='id identifier rubyid_remove_lease_owner'>remove_lease_owner</span><span class='lparen'>(</span><span class='id identifier rubyid_shard'>shard</span><span class='rparen'>)</span> <span class='comment'># release the shard
 </span>    <span class='kw'>end</span>
   <span class='kw'>end</span>
 <span class='kw'>end</span></pre>
@@ -1689,7 +1689,7 @@
 </div>
 
       <div id="footer">
-  Generated on Mon Apr 25 22:59:10 2022 by
+  Generated on Mon Apr 25 23:13:05 2022 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.27 (ruby-2.7.5).
 </div>
