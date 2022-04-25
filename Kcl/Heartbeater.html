@@ -631,7 +631,7 @@
 
 <span class='kw'>def</span> <span class='id identifier rubyid_ping'>ping</span><span class='lparen'>(</span><span class='id identifier rubyid_worker'>worker</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_now'>now</span> <span class='op'>=</span> <span class='const'>Time</span><span class='period'>.</span><span class='id identifier rubyid_now'>now</span><span class='period'>.</span><span class='id identifier rubyid_utc'>utc</span>
-  <span class='id identifier rubyid_next_liveness_timeout'>next_liveness_timeout</span> <span class='op'>=</span> <span class='id identifier rubyid_now'>now</span> <span class='op'>+</span> <span class='lparen'>(</span><span class='const'><span class='object_link'><a href="../Kcl.html" title="Kcl (module)">Kcl</a></span></span><span class='period'>.</span><span class='id identifier rubyid_config'><span class='object_link'><a href="../Kcl.html#config-class_method" title="Kcl.config (method)">config</a></span></span><span class='period'>.</span><span class='id identifier rubyid_sync_interval_seconds'>sync_interval_seconds</span> <span class='op'>*</span> <span class='int'>2</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_next_liveness_timeout'>next_liveness_timeout</span> <span class='op'>=</span> <span class='id identifier rubyid_now'>now</span> <span class='op'>+</span> <span class='lparen'>(</span><span class='const'><span class='object_link'><a href="../Kcl.html" title="Kcl (module)">Kcl</a></span></span><span class='period'>.</span><span class='id identifier rubyid_config'><span class='object_link'><a href="../Kcl.html#config-class_method" title="Kcl.config (method)">config</a></span></span><span class='period'>.</span><span class='id identifier rubyid_sync_interval_seconds'>sync_interval_seconds</span> <span class='op'>*</span> <span class='int'>3</span><span class='rparen'>)</span>
 
   <span class='id identifier rubyid_item'>item</span> <span class='op'>=</span> <span class='lbrace'>{</span>
     <span class='const'><span class='object_link'><a href="#DYNAMO_DB_LIVENESS_PRIMARY_KEY-constant" title="Kcl::Heartbeater::DYNAMO_DB_LIVENESS_PRIMARY_KEY (constant)">DYNAMO_DB_LIVENESS_PRIMARY_KEY</a></span></span><span class='period'>.</span><span class='id identifier rubyid_to_s'>to_s</span> <span class='op'>=&gt;</span> <span class='id identifier rubyid_worker'>worker</span><span class='period'>.</span><span class='id identifier rubyid_id'>id</span><span class='comma'>,</span>
@@ -657,7 +657,7 @@
 </div>
 
       <div id="footer">
-  Generated on Wed Apr 20 00:25:01 2022 by
+  Generated on Mon Apr 25 22:59:10 2022 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.27 (ruby-2.7.5).
 </div>
