@@ -10407,6 +10407,10 @@ JSON::State = JSON::Ext::Generator::State
 JSON::UnparserError = JSON::GeneratorError
 
 class Kcl::LogFormatter
+  def call(severity, time, _progname, msg); end
+end
+
+class Kcl::LogFormatter
 end
 
 module Kernel
@@ -16651,6 +16655,10 @@ class Time
   def self.zone_default(); end
 
   def self.zone_default=(zone_default); end
+end
+
+class Timecop
+  VERSION = ::T.let(nil, ::T.untyped)
 end
 
 class TracePoint

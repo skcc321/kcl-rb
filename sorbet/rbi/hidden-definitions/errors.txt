@@ -574,8 +574,8 @@
 # wrong constant name /
 # wrong constant name <=>
 # uninitialized constant ActiveSupport::Duration::Scalar::EXABYTE
-# Did you mean?  ActiveSupport::Duration::Scalar::TERABYTE
-#                ActiveSupport::Duration::Scalar::MEGABYTE
+# Did you mean?  ActiveSupport::Duration::Scalar::MEGABYTE
+#                ActiveSupport::Duration::Scalar::TERABYTE
 # uninitialized constant ActiveSupport::Duration::Scalar::GIGABYTE
 # uninitialized constant ActiveSupport::Duration::Scalar::KILOBYTE
 # uninitialized constant ActiveSupport::Duration::Scalar::MEGABYTE
@@ -1379,8 +1379,8 @@
 # Did you mean?  Aws::SSOCredentials::ASYNC_EXPIRATION_LENGTH
 # wrong constant name <Class:BasicObject>
 # uninitialized constant BigDecimal::EXABYTE
-# Did you mean?  BigDecimal::TERABYTE
-#                BigDecimal::MEGABYTE
+# Did you mean?  BigDecimal::MEGABYTE
+#                BigDecimal::TERABYTE
 # uninitialized constant BigDecimal::GIGABYTE
 # uninitialized constant BigDecimal::KILOBYTE
 # uninitialized constant BigDecimal::MEGABYTE
@@ -3094,8 +3094,8 @@
 # wrong constant name to_default_s
 # wrong constant name to_fs
 # uninitialized constant Date::Infinity::EXABYTE
-# Did you mean?  Date::Infinity::TERABYTE
-#                Date::Infinity::MEGABYTE
+# Did you mean?  Date::Infinity::MEGABYTE
+#                Date::Infinity::TERABYTE
 # uninitialized constant Date::Infinity::GIGABYTE
 # uninitialized constant Date::Infinity::KILOBYTE
 # uninitialized constant Date::Infinity::MEGABYTE
@@ -3501,8 +3501,8 @@
 # uninitialized constant FileUtils::Verbose::VERSION
 # Did you mean?  FileUtils::VERSION
 # uninitialized constant Float::EXABYTE
-# Did you mean?  Float::TERABYTE
-#                Float::MEGABYTE
+# Did you mean?  Float::MEGABYTE
+#                Float::TERABYTE
 # uninitialized constant Float::GIGABYTE
 # uninitialized constant Float::KILOBYTE
 # uninitialized constant Float::MEGABYTE
@@ -4044,8 +4044,8 @@
 # Did you mean?  DRb
 #                ERB
 # uninitialized constant Integer::EXABYTE
-# Did you mean?  Integer::TERABYTE
-#                Integer::MEGABYTE
+# Did you mean?  Integer::MEGABYTE
+#                Integer::TERABYTE
 # uninitialized constant Integer::GIGABYTE
 # uninitialized constant Integer::KILOBYTE
 # uninitialized constant Integer::MEGABYTE
@@ -4061,6 +4061,8 @@
 # uninitialized constant Jacobian
 # uninitialized constant Jacobian
 # uninitialized constant Kcl::LogFormatter::Format
+# wrong constant name call
+# wrong constant name <static-init>
 # uninitialized constant Kconv
 # uninitialized constant Kconv
 # wrong constant name itself

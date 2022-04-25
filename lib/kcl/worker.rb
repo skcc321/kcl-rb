@@ -14,12 +14,6 @@ module Kcl
       worker.start
     end
 
-    def liveness_timeout_datetime
-      return nil if liveness_timeout.to_s.empty?
-
-      Time.parse(liveness_timeout)
-    end
-
     def initialize(id, record_processor_factory)
       @id = id
       @record_processor_factory = record_processor_factory
@@ -49,6 +43,28 @@ module Kcl
 
     # Start consuming data from the stream,
     # and pass it to the application record processors.
+    def start
+      Kcl.logger.info(message: "Start worker", object_id: object_id)
+
+      demonize { perform }
+      cleanup
+
+      Kcl.logger.info(message: "Finish worker", object_id: object_id)
+    rescue StandardError => e
+      Kcl.logger.error(e)
+      raise e
+    end
+
+    def perform
+      Thread.current[:uuid] = SecureRandom.uuid
+      heartbeat!
+      sync_shards!
+      sync_workers!
+      rebalance_shards!
+      cleanup_dead_consumers
+      consume_shards!
+    end
+
     def demonize(&block)
       return yield if ENV["DEBUG"] == "true"
 
@@ -57,26 +73,6 @@ module Kcl
 
         @timer = EM::PeriodicTimer.new(Kcl.config.sync_interval_seconds, &block)
       end
-    end
-
-    def start
-      Kcl.logger.info(message: "Start worker", object_id: object_id)
-
-      demonize do
-        Thread.current[:uuid] = SecureRandom.uuid
-        heartbeat!
-        sync_shards!
-        sync_workers!
-        rebalance_shards!
-        cleanup_dead_consumers
-        consume_shards!
-      end
-
-      cleanup
-      Kcl.logger.info(message: "Finish worker", object_id: object_id)
-    rescue StandardError => e
-      Kcl.logger.error(e)
-      raise e
     end
 
     def heartbeat!
@@ -191,7 +187,7 @@ module Kcl
         shard.potential_owner
       end
 
-      result.transform_values { |v| v.map(&:first) }.reverse_merge(@id => [])
+      { @id => [], **result.transform_values { |v| v.map(&:first) } }
     end
 
     def active_shards
@@ -227,7 +223,7 @@ module Kcl
         next if shard.potential_owner == @id
         break if stats[:desired_state][@id].count >= stats[:shards_per_worker]
 
-        next unless @workers[shard.potential_owner].blank? || shard.abendoned? ||
+        next unless @workers[shard.potential_owner].nil? || shard.abendoned? ||
           stats[:desired_state][shard.potential_owner].count > stats[:shards_per_worker]
 
         shard_to_move = stats[:desired_state][shard.potential_owner].delete(shard_id)
@@ -273,6 +269,8 @@ module Kcl
             checkpointer
           )
           consumer.consume!
+        ensure
+          checkpointer.remove_lease_owner(shard_id) # release the shard
         end
       end
     end

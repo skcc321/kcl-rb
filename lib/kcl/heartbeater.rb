@@ -49,7 +49,7 @@ module Kcl
 
     def ping(worker)
       now = Time.now.utc
-      next_liveness_timeout = now + (Kcl.config.sync_interval_seconds * 2)
+      next_liveness_timeout = now + (Kcl.config.sync_interval_seconds * 3)
 
       item = {
         DYNAMO_DB_LIVENESS_PRIMARY_KEY.to_s => worker.id,

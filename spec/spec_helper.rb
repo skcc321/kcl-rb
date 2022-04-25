@@ -13,6 +13,7 @@ SimpleCov.start do
 end
 
 require "undercover"
+require "timecop"
 require "pry"
 require "kcl"
 

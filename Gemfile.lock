@@ -96,6 +96,7 @@ GEM
     sorbet (0.5.9837)
       sorbet-static (= 0.5.9837)
     sorbet-static (0.5.9837-universal-darwin-14)
+    timecop (0.9.5)
     tzinfo (2.0.4)
       concurrent-ruby (~> 1.0)
     undercover (0.4.4)
@@ -122,6 +123,7 @@ DEPENDENCIES
   simplecov
   simplecov-lcov
   sorbet
+  timecop
   undercover-checkstyle
 
 BUNDLED WITH
