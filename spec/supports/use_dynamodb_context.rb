@@ -3,6 +3,7 @@
 
 RSpec.shared_context "use_dynamodb" do
   DynamoGetItemResponse = Struct.new(:item)
+  DynamoScanItemsResponse = Struct.new(:items)
 
   let(:stub_dynamodb_client) { Aws::DynamoDB::Client.new(stub_responses: true) }
 
