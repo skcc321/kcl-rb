@@ -270,7 +270,7 @@ module Kcl
           )
           consumer.consume!
         ensure
-          checkpointer.remove_lease_owner(shard_id) # release the shard
+          checkpointer.remove_lease_owner(shard) # release the shard
         end
       end
     end
