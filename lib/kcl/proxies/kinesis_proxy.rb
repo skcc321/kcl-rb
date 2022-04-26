@@ -43,7 +43,11 @@ module Kcl
       # @return [Hash]
       def get_records(shard_iterator)
         res = @client.get_records({ shard_iterator: shard_iterator, limit: Kcl.config.max_records })
-        { records: res.records, next_shard_iterator: res.next_shard_iterator }
+        {
+          records: res.records,
+          next_shard_iterator: res.next_shard_iterator,
+          millis_behind_latest: res.millis_behind_latest
+        }
       end
 
       # @param [Hash] data
