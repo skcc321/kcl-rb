@@ -4,6 +4,7 @@
 require "eventmachine"
 require "securerandom"
 require "kcl/heartbeater"
+require "kcl/stats"
 
 module Kcl
   class Worker
@@ -46,23 +47,22 @@ module Kcl
     def start
       Kcl.logger.info(message: "Start worker", object_id: object_id)
 
-      demonize { perform }
+      demonize do
+        Thread.current[:uuid] = @id
+        heartbeat!
+        sync_shards!
+        sync_workers!
+        rebalance_shards!
+        cleanup_dead_consumers
+        consume_shards!
+      end
+
       cleanup
 
       Kcl.logger.info(message: "Finish worker", object_id: object_id)
     rescue StandardError => e
       Kcl.logger.error(e)
       raise e
-    end
-
-    def perform
-      Thread.current[:uuid] = SecureRandom.uuid
-      heartbeat!
-      sync_shards!
-      sync_workers!
-      rebalance_shards!
-      cleanup_dead_consumers
-      consume_shards!
     end
 
     def demonize(&block)
@@ -164,7 +164,7 @@ module Kcl
         @live_workers[worker.id] = worker.alive?
 
         unless @workers[worker.id]
-          Kcl.logger.info(message: "Found new worker", worker: worker.id)
+          Kcl.logger.info(message: "Registered new worker", worker: worker.id)
         end
 
         @workers[worker.id] = worker
@@ -182,66 +182,39 @@ module Kcl
       @workers
     end
 
-    def current_state
-      result = active_shards.group_by do |_shard_id, shard|
-        shard.potential_owner
-      end
-
-      { @id => [], **result.transform_values { |v| v.map(&:first) } }
-    end
-
-    def active_shards
-      @shards.reject { |_shard_id, shard| shard.completed? }
-    end
-
-    def count_stats
-      shards_count = active_shards.count
-      number_of_workers = @workers.count
-      shards_per_worker = number_of_workers == 1 ? shards_count : (shards_count.to_f / number_of_workers).round
-
-      {
-        id: @id,
-        desired_state: current_state,
-        current_state: current_state,
-        number_of_workers: number_of_workers,
-        shards_per_worker: shards_per_worker,
-        shards_count: shards_count
-      }
-    end
-
     # Count the number of leases hold by worker excluding the processed shard
-    # rubocop:disable Metrics/AbcSize
     def rebalance_shards!
-      stats = count_stats
+      stats = ::Kcl::Stats.new(id: @id, active_shards: active_shards, worker_ids: @workers.keys.sort)
+      stats.validate!
 
       active_shards.each do |shard_id, shard|
-        if shard.potential_owner && shard.potential_owner != @id && @consumers[shard_id] && !@consumers[shard_id][:stop]
+        potential_owner = shard.potential_owner
+
+        # skip if potential owner is already associated with the shard
+        next if potential_owner == @id
+
+        # === give own shard away if shard has potential_owner different then @id
+        # and current worker does not have active consumer related to the shard
+        if potential_owner && @consumers[shard_id] && !@consumers[shard_id][:stop]
           Kcl.logger.info(message: "soft release", shard: shard)
           @consumers[shard_id][:stop] = true
+
+        # === take shard from potential_owner to the worker
+        # if the worker has capacity to obtain new shard
+        elsif stats.worker_underloaded?
+          # skip if shard is abused? && potential owner has capacity?
+          next if shard.abused? && @workers[potential_owner] && stats.worker_completed?(potential_owner)
+
+          stats.take_shard_from(potential_owner, shard_id)
+          @shards[shard_id] = checkpointer.ask_for_lease(shard, @id)
+
+          Kcl.logger.info(message: "ask release", shard: shard)
         end
-
-        next if shard.potential_owner == @id
-        break if stats[:desired_state][@id].count >= stats[:shards_per_worker]
-
-        next unless @workers[shard.potential_owner].nil? || shard.abendoned? ||
-          stats[:desired_state][shard.potential_owner].count > stats[:shards_per_worker]
-
-        shard_to_move = stats[:desired_state][shard.potential_owner].delete(shard_id)
-        stats[:desired_state][@id].push(shard_to_move)
-        @shards[shard_id] = checkpointer.ask_for_lease(shard, @id)
-        Kcl.logger.info(message: "ask release", shard: shard)
       end
 
-      if stats[:desired_state] != stats[:current_state]
-        Kcl.logger.info(message: "Rebalancing...", **stats)
-      end
+      Kcl.logger.info(message: "Rebalancing...", **stats) if stats.rebalancing?
     rescue Aws::DynamoDB::Errors::ConditionalCheckFailedException
       Kcl.logger.error(message: "Rebalance failed", to: @id)
-    end
-    # rubocop:enable Metrics/AbcSize
-
-    def cleanup_dead_consumers
-      @consumers.delete_if { |_shard_id, consumer| !consumer.alive? }
     end
 
     # Process records by shard
@@ -273,6 +246,14 @@ module Kcl
           checkpointer.remove_lease_owner(shard) # release the shard
         end
       end
+    end
+
+    def active_shards
+      @shards.reject { |_shard_id, shard| shard.completed? }
+    end
+
+    def cleanup_dead_consumers
+      @consumers.delete_if { |_shard_id, consumer| !consumer.alive? }
     end
 
     private
