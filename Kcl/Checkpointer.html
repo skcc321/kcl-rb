@@ -940,8 +940,7 @@
 198
 199
 200
-201
-202</pre>
+201</pre>
     </td>
     <td>
       <pre class="code"><span class="info file"># File 'lib/kcl/checkpointer.rb', line 188</span>
@@ -950,11 +949,10 @@
   <span class='id identifier rubyid_result'>result</span> <span class='op'>=</span> <span class='ivar'>@dynamodb</span><span class='period'>.</span><span class='id identifier rubyid_update_item'>update_item</span><span class='lparen'>(</span>
     <span class='ivar'>@table_name</span><span class='comma'>,</span>
     <span class='lbrace'>{</span> <span class='const'><span class='object_link'><a href="#DYNAMO_DB_LEASE_PRIMARY_KEY-constant" title="Kcl::Checkpointer::DYNAMO_DB_LEASE_PRIMARY_KEY (constant)">DYNAMO_DB_LEASE_PRIMARY_KEY</a></span></span><span class='period'>.</span><span class='id identifier rubyid_to_s'>to_s</span> <span class='op'>=&gt;</span> <span class='id identifier rubyid_shard'>shard</span><span class='period'>.</span><span class='id identifier rubyid_shard_id'>shard_id</span> <span class='rbrace'>}</span><span class='comma'>,</span>
-    <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>remove </span><span class='embexpr_beg'>#{</span><span class='const'><span class='object_link'><a href="#DYNAMO_DB_LEASE_OWNER_KEY-constant" title="Kcl::Checkpointer::DYNAMO_DB_LEASE_OWNER_KEY (constant)">DYNAMO_DB_LEASE_OWNER_KEY</a></span></span><span class='embexpr_end'>}</span><span class='tstring_content'>, </span><span class='embexpr_beg'>#{</span><span class='const'><span class='object_link'><a href="#DYNAMO_DB_LEASE_TIMEOUT_KEY-constant" title="Kcl::Checkpointer::DYNAMO_DB_LEASE_TIMEOUT_KEY (constant)">DYNAMO_DB_LEASE_TIMEOUT_KEY</a></span></span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span>
+    <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>remove </span><span class='embexpr_beg'>#{</span><span class='const'><span class='object_link'><a href="#DYNAMO_DB_LEASE_OWNER_KEY-constant" title="Kcl::Checkpointer::DYNAMO_DB_LEASE_OWNER_KEY (constant)">DYNAMO_DB_LEASE_OWNER_KEY</a></span></span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span>
   <span class='rparen'>)</span>
   <span class='kw'>if</span> <span class='id identifier rubyid_result'>result</span>
     <span class='id identifier rubyid_shard'>shard</span><span class='period'>.</span><span class='id identifier rubyid_lease_owner'>lease_owner</span> <span class='op'>=</span> <span class='kw'>nil</span>
-    <span class='id identifier rubyid_shard'>shard</span><span class='period'>.</span><span class='id identifier rubyid_lease_timeout'>lease_timeout</span> <span class='op'>=</span> <span class='kw'>nil</span>
   <span class='kw'>else</span>
     <span class='const'><span class='object_link'><a href="../Kcl.html" title="Kcl (module)">Kcl</a></span></span><span class='period'>.</span><span class='id identifier rubyid_logger'><span class='object_link'><a href="../Kcl.html#logger-class_method" title="Kcl.logger (method)">logger</a></span></span><span class='period'>.</span><span class='id identifier rubyid_warn'>warn</span><span class='lparen'>(</span><span class='label'>message:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Failed to remove lease owner for shard</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span> <span class='label'>shard:</span> <span class='id identifier rubyid_shard'>shard</span><span class='period'>.</span><span class='id identifier rubyid_to_h'>to_h</span><span class='rparen'>)</span>
   <span class='kw'>end</span>
@@ -1059,7 +1057,7 @@
 </div>
 
       <div id="footer">
-  Generated on Tue Apr 26 06:55:18 2022 by
+  Generated on Wed Apr 27 00:27:14 2022 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.27 (ruby-2.7.5).
 </div>
