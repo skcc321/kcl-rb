@@ -53,6 +53,10 @@ module Kcl
         !lease_timeout || Time.now.utc > lease_timeout_datetime
       end
 
+      def abused?
+        !abendoned?
+      end
+
       def can_be_processed_by?(id)
         # another worker abandoned the shard I got new_owner
         (lease_owner != id && abendoned? && pending_owner == id)

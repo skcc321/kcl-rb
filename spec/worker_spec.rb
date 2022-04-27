@@ -24,8 +24,16 @@ RSpec.describe Kcl::Worker, :aggregate_failures do
     Timecop.return
   end
 
-  describe "#perform" do
-    subject { worker.perform }
+  describe "#start" do
+    subject { worker.start }
+
+    before do
+      ENV["DEBUG"] = "true"
+    end
+
+    after do
+      ENV["DEBUG"] = nil
+    end
 
     it do
       expect(worker).to receive(:heartbeat!).ordered
@@ -34,6 +42,7 @@ RSpec.describe Kcl::Worker, :aggregate_failures do
       expect(worker).to receive(:rebalance_shards!).ordered
       expect(worker).to receive(:cleanup_dead_consumers).ordered
       expect(worker).to receive(:consume_shards!).ordered
+      expect(worker).to receive(:cleanup).ordered
 
       subject
     end

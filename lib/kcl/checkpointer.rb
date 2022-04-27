@@ -189,11 +189,10 @@ module Kcl
       result = @dynamodb.update_item(
         @table_name,
         { DYNAMO_DB_LEASE_PRIMARY_KEY.to_s => shard.shard_id },
-        "remove #{DYNAMO_DB_LEASE_OWNER_KEY}, #{DYNAMO_DB_LEASE_TIMEOUT_KEY}"
+        "remove #{DYNAMO_DB_LEASE_OWNER_KEY}"
       )
       if result
         shard.lease_owner = nil
-        shard.lease_timeout = nil
       else
         Kcl.logger.warn(message: "Failed to remove lease owner for shard", shard: shard.to_h)
       end
