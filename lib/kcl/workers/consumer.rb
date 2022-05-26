@@ -35,7 +35,7 @@ module Kcl
           shard_iterator = result[:next_shard_iterator]
           break if !shard_iterator || shard_iterator.empty? || Thread.current[:stop]
 
-          sleep(0.1)
+          sleep(0.2)
         end
 
         shutdown_reason = if shard_iterator.nil?
