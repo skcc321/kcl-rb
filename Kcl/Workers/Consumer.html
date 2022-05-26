@@ -398,7 +398,7 @@
     <span class='id identifier rubyid_shard_iterator'>shard_iterator</span> <span class='op'>=</span> <span class='id identifier rubyid_result'>result</span><span class='lbracket'>[</span><span class='symbol'>:next_shard_iterator</span><span class='rbracket'>]</span>
     <span class='kw'>break</span> <span class='kw'>if</span> <span class='op'>!</span><span class='id identifier rubyid_shard_iterator'>shard_iterator</span> <span class='op'>||</span> <span class='id identifier rubyid_shard_iterator'>shard_iterator</span><span class='period'>.</span><span class='id identifier rubyid_empty?'>empty?</span> <span class='op'>||</span> <span class='const'>Thread</span><span class='period'>.</span><span class='id identifier rubyid_current'>current</span><span class='lbracket'>[</span><span class='symbol'>:stop</span><span class='rbracket'>]</span>
 
-    <span class='id identifier rubyid_sleep'>sleep</span><span class='lparen'>(</span><span class='float'>0.1</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_sleep'>sleep</span><span class='lparen'>(</span><span class='float'>0.2</span><span class='rparen'>)</span>
   <span class='kw'>end</span>
 
   <span class='id identifier rubyid_shutdown_reason'>shutdown_reason</span> <span class='op'>=</span> <span class='kw'>if</span> <span class='id identifier rubyid_shard_iterator'>shard_iterator</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
@@ -583,9 +583,9 @@
 </div>
 
       <div id="footer">
-  Generated on Wed Apr 27 00:27:14 2022 by
+  Generated on Thu May 26 10:24:51 2022 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
-  0.9.27 (ruby-2.7.5).
+  0.9.27 (ruby-2.7.6).
 </div>
 
     </div>
