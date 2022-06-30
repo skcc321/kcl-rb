@@ -11,7 +11,9 @@ module Kcl
       def initialize(config)
         @client = Aws::Kinesis::Client.new(
           {
-            endpoint: config.kinesis_endpoint
+              endpoint: config.kinesis_endpoint,
+              credentials: config.kinesis_credentials,
+              profile: config.kinesis_profile
           }.compact
         )
         @stream_name = config.kinesis_stream_name
