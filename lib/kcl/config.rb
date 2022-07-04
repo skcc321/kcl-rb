@@ -4,11 +4,15 @@
 module Kcl
   class Config
     attr_accessor :dynamodb_endpoint,
+      :dynamodb_credentials,
+      :dynamodb_profile,
       :dynamodb_failover_seconds,
       :dynamodb_read_capacity,
       :dynamodb_table_name,
       :dynamodb_write_capacity,
       :kinesis_endpoint,
+      :kinesis_credentials,
+      :kinesis_profile,
       :kinesis_stream_name,
       :log_level,
       :logger,
@@ -20,11 +24,15 @@ module Kcl
     # Set default values
     def initialize
       @dynamodb_endpoint = nil
+      @dynamodb_credentials = nil
+      @dynamodb_profile = nil
       @dynamodb_failover_seconds = 10
       @dynamodb_read_capacity = 10
       @dynamodb_table_name = nil
       @dynamodb_write_capacity = 10
       @kinesis_endpoint = nil
+      @kinesis_credentials = nil
+      @kinesis_profile = nil
       @kinesis_stream_name = nil
       @logger = nil
       @max_records = 10
