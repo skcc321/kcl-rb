@@ -6,7 +6,7 @@
 <title>
   Class: Kcl::Proxies::DynamoDbProxy
   
-    &mdash; Documentation by YARD 0.9.27
+    &mdash; Documentation by YARD 0.9.28
   
 </title>
 
@@ -388,7 +388,9 @@
 14
 15
 16
-17</pre>
+17
+18
+19</pre>
     </td>
     <td>
       <pre class="code"><span class="info file"># File 'lib/kcl/proxies/dynamo_db_proxy.rb', line 11</span>
@@ -396,7 +398,9 @@
 <span class='kw'>def</span> <span class='id identifier rubyid_initialize'>initialize</span><span class='lparen'>(</span><span class='id identifier rubyid_config'>config</span><span class='rparen'>)</span>
   <span class='ivar'>@client</span> <span class='op'>=</span> <span class='const'>Aws</span><span class='op'>::</span><span class='const'>DynamoDB</span><span class='op'>::</span><span class='const'>Client</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span>
     <span class='lbrace'>{</span>
-      <span class='label'>endpoint:</span> <span class='id identifier rubyid_config'>config</span><span class='period'>.</span><span class='id identifier rubyid_dynamodb_endpoint'>dynamodb_endpoint</span>
+        <span class='label'>endpoint:</span> <span class='id identifier rubyid_config'>config</span><span class='period'>.</span><span class='id identifier rubyid_dynamodb_endpoint'>dynamodb_endpoint</span><span class='comma'>,</span>
+        <span class='label'>credentials:</span> <span class='id identifier rubyid_config'>config</span><span class='period'>.</span><span class='id identifier rubyid_dynamodb_credentials'>dynamodb_credentials</span><span class='comma'>,</span>
+        <span class='label'>profile:</span> <span class='id identifier rubyid_config'>config</span><span class='period'>.</span><span class='id identifier rubyid_dynamodb_profile'>dynamodb_profile</span>
     <span class='rbrace'>}</span><span class='period'>.</span><span class='id identifier rubyid_compact'>compact</span>
   <span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
@@ -497,8 +501,6 @@
       <pre class="lines">
 
 
-103
-104
 105
 106
 107
@@ -509,10 +511,12 @@
 112
 113
 114
-115</pre>
+115
+116
+117</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/kcl/proxies/dynamo_db_proxy.rb', line 103</span>
+      <pre class="code"><span class="info file"># File 'lib/kcl/proxies/dynamo_db_proxy.rb', line 105</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_conditional_update_item'>conditional_update_item</span><span class='lparen'>(</span><span class='id identifier rubyid_table_name'>table_name</span><span class='comma'>,</span> <span class='id identifier rubyid_item'>item</span><span class='comma'>,</span> <span class='id identifier rubyid_condition_expression'>condition_expression</span><span class='comma'>,</span> <span class='id identifier rubyid_expression_attributes'>expression_attributes</span><span class='rparen'>)</span>
   <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_put_item'>put_item</span><span class='lparen'>(</span>
@@ -547,8 +551,6 @@
       <pre class="lines">
 
 
-32
-33
 34
 35
 36
@@ -556,10 +558,12 @@
 38
 39
 40
-41</pre>
+41
+42
+43</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/kcl/proxies/dynamo_db_proxy.rb', line 32</span>
+      <pre class="code"><span class="info file"># File 'lib/kcl/proxies/dynamo_db_proxy.rb', line 34</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_create_table'>create_table</span><span class='lparen'>(</span><span class='id identifier rubyid_table_name'>table_name</span><span class='comma'>,</span> <span class='id identifier rubyid_attributes'>attributes</span> <span class='op'>=</span> <span class='lbracket'>[</span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='id identifier rubyid_schema'>schema</span> <span class='op'>=</span> <span class='lbracket'>[</span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='id identifier rubyid_throughputs'>throughputs</span> <span class='op'>=</span> <span class='lbrace'>{</span><span class='rbrace'>}</span><span class='rparen'>)</span>
   <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_create_table'>create_table</span><span class='lparen'>(</span>
@@ -591,15 +595,15 @@
       <pre class="lines">
 
 
-44
-45
 46
 47
 48
-49</pre>
+49
+50
+51</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/kcl/proxies/dynamo_db_proxy.rb', line 44</span>
+      <pre class="code"><span class="info file"># File 'lib/kcl/proxies/dynamo_db_proxy.rb', line 46</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_delete_table'>delete_table</span><span class='lparen'>(</span><span class='id identifier rubyid_table_name'>table_name</span><span class='rparen'>)</span>
   <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_delete_table'>delete_table</span><span class='lparen'>(</span><span class='lbrace'>{</span> <span class='label'>table_name:</span> <span class='id identifier rubyid_table_name'>table_name</span> <span class='rbrace'>}</span><span class='rparen'>)</span>
@@ -649,16 +653,16 @@
       <pre class="lines">
 
 
-20
-21
 22
 23
 24
 25
-26</pre>
+26
+27
+28</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/kcl/proxies/dynamo_db_proxy.rb', line 20</span>
+      <pre class="code"><span class="info file"># File 'lib/kcl/proxies/dynamo_db_proxy.rb', line 22</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_exists?'>exists?</span><span class='lparen'>(</span><span class='id identifier rubyid_table_name'>table_name</span><span class='rparen'>)</span>
   <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_describe_table'>describe_table</span><span class='lparen'>(</span><span class='lbrace'>{</span> <span class='label'>table_name:</span> <span class='id identifier rubyid_table_name'>table_name</span> <span class='rbrace'>}</span><span class='rparen'>)</span>
@@ -709,8 +713,6 @@
       <pre class="lines">
 
 
-54
-55
 56
 57
 58
@@ -719,10 +721,12 @@
 61
 62
 63
-64</pre>
+64
+65
+66</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/kcl/proxies/dynamo_db_proxy.rb', line 54</span>
+      <pre class="code"><span class="info file"># File 'lib/kcl/proxies/dynamo_db_proxy.rb', line 56</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_get_item'>get_item</span><span class='lparen'>(</span><span class='id identifier rubyid_table_name'>table_name</span><span class='comma'>,</span> <span class='id identifier rubyid_conditions'>conditions</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_response'>response</span> <span class='op'>=</span> <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_get_item'>get_item</span><span class='lparen'>(</span>
@@ -777,8 +781,6 @@
       <pre class="lines">
 
 
-69
-70
 71
 72
 73
@@ -787,10 +789,12 @@
 76
 77
 78
-79</pre>
+79
+80
+81</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/kcl/proxies/dynamo_db_proxy.rb', line 69</span>
+      <pre class="code"><span class="info file"># File 'lib/kcl/proxies/dynamo_db_proxy.rb', line 71</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_put_item'>put_item</span><span class='lparen'>(</span><span class='id identifier rubyid_table_name'>table_name</span><span class='comma'>,</span> <span class='id identifier rubyid_item'>item</span><span class='rparen'>)</span>
   <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_put_item'>put_item</span><span class='lparen'>(</span>
@@ -845,8 +849,6 @@
       <pre class="lines">
 
 
-120
-121
 122
 123
 124
@@ -855,10 +857,12 @@
 127
 128
 129
-130</pre>
+130
+131
+132</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/kcl/proxies/dynamo_db_proxy.rb', line 120</span>
+      <pre class="code"><span class="info file"># File 'lib/kcl/proxies/dynamo_db_proxy.rb', line 122</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_remove_item'>remove_item</span><span class='lparen'>(</span><span class='id identifier rubyid_table_name'>table_name</span><span class='comma'>,</span> <span class='id identifier rubyid_conditions'>conditions</span><span class='rparen'>)</span>
   <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_delete_item'>delete_item</span><span class='lparen'>(</span>
@@ -913,8 +917,6 @@
       <pre class="lines">
 
 
-85
-86
 87
 88
 89
@@ -924,10 +926,12 @@
 93
 94
 95
-96</pre>
+96
+97
+98</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/kcl/proxies/dynamo_db_proxy.rb', line 85</span>
+      <pre class="code"><span class="info file"># File 'lib/kcl/proxies/dynamo_db_proxy.rb', line 87</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_update_item'>update_item</span><span class='lparen'>(</span><span class='id identifier rubyid_table_name'>table_name</span><span class='comma'>,</span> <span class='id identifier rubyid_conditions'>conditions</span><span class='comma'>,</span> <span class='id identifier rubyid_update_expression'>update_expression</span><span class='rparen'>)</span>
   <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_update_item'>update_item</span><span class='lparen'>(</span>
@@ -951,9 +955,9 @@
 </div>
 
       <div id="footer">
-  Generated on Thu May 26 10:24:51 2022 by
-  <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
-  0.9.27 (ruby-2.7.6).
+  Generated on Mon Jul  4 21:59:57 2022 by
+  <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
+  0.9.28 (ruby-2.7.6).
 </div>
 
     </div>

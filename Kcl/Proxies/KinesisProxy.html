@@ -6,7 +6,7 @@
 <title>
   Class: Kcl::Proxies::KinesisProxy
   
-    &mdash; Documentation by YARD 0.9.27
+    &mdash; Documentation by YARD 0.9.28
   
 </title>
 
@@ -301,7 +301,9 @@
 15
 16
 17
-18</pre>
+18
+19
+20</pre>
     </td>
     <td>
       <pre class="code"><span class="info file"># File 'lib/kcl/proxies/kinesis_proxy.rb', line 11</span>
@@ -309,7 +311,9 @@
 <span class='kw'>def</span> <span class='id identifier rubyid_initialize'>initialize</span><span class='lparen'>(</span><span class='id identifier rubyid_config'>config</span><span class='rparen'>)</span>
   <span class='ivar'>@client</span> <span class='op'>=</span> <span class='const'>Aws</span><span class='op'>::</span><span class='const'>Kinesis</span><span class='op'>::</span><span class='const'>Client</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span>
     <span class='lbrace'>{</span>
-      <span class='label'>endpoint:</span> <span class='id identifier rubyid_config'>config</span><span class='period'>.</span><span class='id identifier rubyid_kinesis_endpoint'>kinesis_endpoint</span>
+        <span class='label'>endpoint:</span> <span class='id identifier rubyid_config'>config</span><span class='period'>.</span><span class='id identifier rubyid_kinesis_endpoint'>kinesis_endpoint</span><span class='comma'>,</span>
+        <span class='label'>credentials:</span> <span class='id identifier rubyid_config'>config</span><span class='period'>.</span><span class='id identifier rubyid_kinesis_credentials'>kinesis_credentials</span><span class='comma'>,</span>
+        <span class='label'>profile:</span> <span class='id identifier rubyid_config'>config</span><span class='period'>.</span><span class='id identifier rubyid_kinesis_profile'>kinesis_profile</span>
     <span class='rbrace'>}</span><span class='period'>.</span><span class='id identifier rubyid_compact'>compact</span>
   <span class='rparen'>)</span>
   <span class='ivar'>@stream_name</span> <span class='op'>=</span> <span class='id identifier rubyid_config'>config</span><span class='period'>.</span><span class='id identifier rubyid_kinesis_stream_name'>kinesis_stream_name</span>
@@ -426,17 +430,17 @@
       <pre class="lines">
 
 
-44
-45
 46
 47
 48
 49
 50
-51</pre>
+51
+52
+53</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/kcl/proxies/kinesis_proxy.rb', line 44</span>
+      <pre class="code"><span class="info file"># File 'lib/kcl/proxies/kinesis_proxy.rb', line 46</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_get_records'>get_records</span><span class='lparen'>(</span><span class='id identifier rubyid_shard_iterator'>shard_iterator</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_res'>res</span> <span class='op'>=</span> <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_get_records'>get_records</span><span class='lparen'>(</span><span class='lbrace'>{</span> <span class='label'>shard_iterator:</span> <span class='id identifier rubyid_shard_iterator'>shard_iterator</span><span class='comma'>,</span> <span class='label'>limit:</span> <span class='const'><span class='object_link'><a href="../../Kcl.html" title="Kcl (module)">Kcl</a></span></span><span class='period'>.</span><span class='id identifier rubyid_config'><span class='object_link'><a href="../../Kcl.html#config-class_method" title="Kcl.config (method)">config</a></span></span><span class='period'>.</span><span class='id identifier rubyid_max_records'>max_records</span> <span class='rbrace'>}</span><span class='rparen'>)</span>
@@ -516,8 +520,6 @@
       <pre class="lines">
 
 
-29
-30
 31
 32
 33
@@ -527,10 +529,12 @@
 37
 38
 39
-40</pre>
+40
+41
+42</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/kcl/proxies/kinesis_proxy.rb', line 29</span>
+      <pre class="code"><span class="info file"># File 'lib/kcl/proxies/kinesis_proxy.rb', line 31</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_get_shard_iterator'>get_shard_iterator</span><span class='lparen'>(</span><span class='id identifier rubyid_shard_id'>shard_id</span><span class='comma'>,</span> <span class='id identifier rubyid_shard_iterator_type'>shard_iterator_type</span> <span class='op'>=</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='id identifier rubyid_sequence_number'>sequence_number</span> <span class='op'>=</span> <span class='kw'>nil</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_params'>params</span> <span class='op'>=</span> <span class='lbrace'>{</span>
@@ -601,13 +605,13 @@
       <pre class="lines">
 
 
-55
-56
 57
-58</pre>
+58
+59
+60</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/kcl/proxies/kinesis_proxy.rb', line 55</span>
+      <pre class="code"><span class="info file"># File 'lib/kcl/proxies/kinesis_proxy.rb', line 57</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_put_record'>put_record</span><span class='lparen'>(</span><span class='id identifier rubyid_data'>data</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_res'>res</span> <span class='op'>=</span> <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_put_record'>put_record</span><span class='lparen'>(</span><span class='id identifier rubyid_data'>data</span><span class='rparen'>)</span>
@@ -655,13 +659,13 @@
       <pre class="lines">
 
 
-21
-22
 23
-24</pre>
+24
+25
+26</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/kcl/proxies/kinesis_proxy.rb', line 21</span>
+      <pre class="code"><span class="info file"># File 'lib/kcl/proxies/kinesis_proxy.rb', line 23</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_shards'>shards</span>
   <span class='id identifier rubyid_res'>res</span> <span class='op'>=</span> <span class='ivar'>@client</span><span class='period'>.</span><span class='id identifier rubyid_describe_stream'>describe_stream</span><span class='lparen'>(</span><span class='lbrace'>{</span> <span class='label'>stream_name:</span> <span class='ivar'>@stream_name</span> <span class='rbrace'>}</span><span class='rparen'>)</span>
@@ -677,9 +681,9 @@
 </div>
 
       <div id="footer">
-  Generated on Thu May 26 10:24:51 2022 by
-  <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
-  0.9.27 (ruby-2.7.6).
+  Generated on Mon Jul  4 21:59:57 2022 by
+  <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
+  0.9.28 (ruby-2.7.6).
 </div>
 
     </div>
