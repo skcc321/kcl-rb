@@ -39,8 +39,8 @@ module Kcl
         if defined?(Datadog)
           {
             dd: {
-              span_id: Datadog.tracer.active_correlation.span_id,
-              trace_id: Datadog.tracer.active_correlation.trace_id
+              span_id: Datadog::Tracing.correlation.span_id,
+              trace_id: Datadog::Tracing.correlation.trace_id
             }
           }
         else
